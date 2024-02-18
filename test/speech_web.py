@@ -30,7 +30,7 @@ def record_and_transcribe():
         print('Конец записи звука')
 
         # Загрузка записанного аудиофайла
-        audio_path = "./voice/recorded_audio.wav"
+        audio_path = "voice/recorded_audio.wav"
         speech, _ = torchaudio.load(audio_path)
 
         # Преобразование с использованием модели
