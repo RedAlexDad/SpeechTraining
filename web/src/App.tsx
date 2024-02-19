@@ -8,10 +8,11 @@ const App: React.FC = () => {
 
     const [currentCollectionIndex, setCurrentCollectionIndex] = useState<number>(0);
     const sentencesCollections: string[][] = [
-        ["Привет"],
-        ["Как дела?"],
-        ["Другой пример слова"],
-        ["Другой пример слова 2"],
+        ["привет"],
+        ["как дела?"],
+        ["тестирование"],
+        ["другой пример слова"],
+        ["другой пример слова 2"],
         // Добавьте больше коллекций по вашему усмотрению
     ];
 
@@ -43,9 +44,9 @@ const App: React.FC = () => {
         const splitSentence = sentence.split('');
         const splitTranscription = transcription.split('');
         const highlightedText = splitSentence.map((char, index) => (
-            <span key={index} style={{ color: char === splitTranscription[index] ? 'red' : 'green' }}>
-                {char}
-            </span>
+            <span key={index} className={char === splitTranscription[index] ? 'correct' : 'error'}>
+            {char}
+        </span>
         ));
 
         return highlightedText;
@@ -57,21 +58,21 @@ const App: React.FC = () => {
     return (
         <div className="App">
             <header className="App-header">
-                <p>Прочитайте этот текст: </p>
+                <p style={{ fontSize: '1.5em' }}>Прочитайте этот текст: </p>
                 {sentencesCollections[currentCollectionIndex].map((sentence: string, index: number) => (
                     <p key={index}>
                         {renderHighlightedText(sentence, transcription)}
                     </p>
                 ))}
-                <br/>
-                <p>Распознанный текст: {transcription}</p>
-                <p>Процент ошибок произношения: {accuracy}%</p>
+                <br />
+                <p style={{ fontSize: '1.2em' }}>Распознанный текст: {transcription}</p>
+                <p style={{ fontSize: '1.2em' }}>Процент ошибок произношения: {accuracy}%</p>
                 <button onClick={startRecording} disabled={isRecording}>
                     {isRecording ? 'Идет запись...' : 'Начать запись'}
                 </button>
-                <button onClick={switchCollection}>
+                {!isRecording && <button onClick={switchCollection}>
                     Переключить коллекцию
-                </button>
+                </button>}
             </header>
         </div>
     );

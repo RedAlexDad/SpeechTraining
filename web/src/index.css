@@ -5,28 +5,51 @@ body {
   sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-  monospace;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #646464;
 }
 
 .App {
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
 .App-header {
-  background-color: #282c34;
-  padding: 20px;
+  background-color: #4b4b4b;
+  padding: 50px;
   color: white;
+  width: 80%; /* Добавлено для ограничения ширины хедера */
 }
 
 .App-link {
   color: #61dafb;
+}
+
+.App p {
+  font-size: 1.5em;
+  margin: 0;
+}
+
+.App button {
+  margin-top: 10px;
+}
+
+.App span {
+  display: inline-block;
+  color: black;
+}
+
+.App span.correct {
+  color: green;
+}
+
+.App span.error {
+  color: red;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  monospace;
 }
