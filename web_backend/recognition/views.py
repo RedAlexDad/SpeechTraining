@@ -46,7 +46,11 @@ class TranscriptionView(APIView):
         # Запись звука
         print('Начало записи звука')
         # Запись голоса и сохранение в формате WAV
-        recording = sd.rec(int(3 * 44100), samplerate=44100, channels=1, dtype='int16')
+        # Запись на 3 секунды (SECONDS) с частотой дискретизации 44100 Гц (SAMPLING_RATE)
+        SECONDS = 3
+        SAMPLING_RATE = 44_100
+        MONO_CHANNEL = 1
+        recording = sd.rec(int(SECONDS * SAMPLING_RATE), samplerate=SAMPLING_RATE, channels=MONO_CHANNEL, dtype='int16')
         sd.wait()
         # Преобразуем 1D тензор в 2D, добавив размерность пакета
         recording = torch.from_numpy(recording.squeeze()).unsqueeze(0)
@@ -58,11 +62,14 @@ class TranscriptionView(APIView):
         speech, _ = torchaudio.load(audio_path)
 
         # Преобразование с использованием модели
+        # orig_freq - частота дискретизации (количество измерений аудиосигнала в секунду) оригинального аудиосигнала, который вы передаёте в Resample
+        # new_freq - желаемая частота дискретизации, которую мы будем получать после преобразования
         resampler = torchaudio.transforms.Resample(orig_freq=48_000, new_freq=16_000)
         input_values = resampler.forward(speech.squeeze(0)).numpy()
 
         # Токенизация и получение предсказания от модели
-        input_values = torch.tensor(input_values).unsqueeze(0)  # добавляем размерность пакета
+        # Добавляем размерность пакета
+        input_values = torch.tensor(input_values).unsqueeze(0)
         with torch.no_grad():
             logits = model(input_values).logits
             predicted_ids = torch.argmax(logits, dim=-1)
