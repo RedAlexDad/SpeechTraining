@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const App: React.FC = () => {
     const [transcription, setTranscription] = useState<string>('');
-    const [accuracy, setAccuracy] = useState<string>('');
+    const [accuracy, setAccuracy] = useState({wer: null, cer: null, mer: null, wil: null});
     const [isRecording, setIsRecording] = useState<boolean>(false);
 
     const [currentCollectionIndex, setCurrentCollectionIndex] = useState<number>(0);
@@ -25,7 +25,8 @@ const App: React.FC = () => {
             .then(response => {
                 const data = response.data;
                 setTranscription(data.text);
-                setAccuracy(data.error_percentage);
+                setAccuracy({wer: data.wer, cer: data.cer, mer: data.mer, wil: data.wil});
+                // console.log(data);
             })
             .catch(error => {
                 console.error('Ошибка при выполнении запроса:', error);
@@ -65,8 +66,17 @@ const App: React.FC = () => {
                     </p>
                 ))}
                 <br />
-                <p style={{ fontSize: '1.2em' }}>Распознанный текст: {transcription}</p>
-                <p style={{ fontSize: '1.2em' }}>Процент ошибок произношения: {accuracy}%</p>
+                {transcription &&
+                    <p style={{ fontSize: '1.2em' }}>Распознанный текст: {transcription}</p>
+                }
+                {accuracy.wer !== null && accuracy.cer !== null && accuracy.mer!== null && accuracy.wil!== null && (
+                    <>
+                        <p style={{ fontSize: '1.2em' }}>Метрика WER: {accuracy.wer}</p>
+                        <p style={{ fontSize: '1.2em' }}>Метрика CER: {accuracy.cer}</p>
+                        <p style={{ fontSize: '1.2em' }}>Метрика MER: {accuracy.mer}</p>
+                        <p style={{ fontSize: '1.2em' }}>Метрика WIL: {accuracy.wil}</p>
+                    </>
+                )}
                 <button onClick={startRecording} disabled={isRecording}>
                     {isRecording ? 'Идет запись...' : 'Начать запись'}
                 </button>
