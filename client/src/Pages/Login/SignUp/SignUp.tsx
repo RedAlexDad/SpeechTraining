@@ -1,6 +1,6 @@
 import "../Login.sass"
 import {FaLock, FaRegBuilding, FaSignsPost, FaUser} from "react-icons/fa6";
-import {GrLogin, GrMap} from "react-icons/gr";
+import {GrLogin} from "react-icons/gr";
 import {Link, useNavigate} from "react-router-dom";
 import axios from "axios";
 import {useToken} from "../../../Hooks/useToken";

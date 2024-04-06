@@ -21,14 +21,14 @@ CREATE TABLE recognition_data
     data_recognition   VARCHAR
 );
 
-CREATE TABLE metric
+CREATE TABLE metrics
 (
     id   SERIAL PRIMARY KEY,
-    WER  TEXT,
-    CER  TEXT,
-    MER  TEXT,
-    WIL  TEXT,
-    IWER TEXT
+    WER  FLOAT,
+    CER  FLOAT,
+    MER  FLOAT,
+    WIL  FLOAT,
+    IWER FLOAT
 );
 
 CREATE TABLE recommendation
@@ -48,7 +48,7 @@ ALTER TABLE recognition_data
 
 ALTER TABLE recognition_data
     ADD CONSTRAINT FR_recognition_data_of_metric
-        FOREIGN KEY (id_metric) REFERENCES metric (id);
+        FOREIGN KEY (id_metric) REFERENCES metrics (id);
 
 ALTER TABLE recognition_data
     ADD CONSTRAINT FR_recognition_data_of_recommendation
@@ -68,13 +68,13 @@ SELECT *
 FROM account;
 
 -- Данные для таблицы "metric"
-INSERT INTO metric (WER, CER, MER, WIL, IWER)
+INSERT INTO metrics (WER, CER, MER, WIL, IWER)
 VALUES ('0.1', '0.05', '0.08', '0.03', '0.12'),
        ('0.15', '0.07', '0.1', '0.04', '0.17'),
        ('0.09', '0.04', '0.06', '0.02', '0.1');
 
 SELECT *
-FROM metric;
+FROM metrics;
 
 INSERT INTO recommendation (id_logodedist, recommendation_type, recommendation_text_by_llm,
                             recommendation_text_by_logopedist, date_recommendation)

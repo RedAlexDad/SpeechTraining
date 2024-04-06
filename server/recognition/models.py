@@ -21,7 +21,6 @@ class UserManager(BaseUserManager):
         return self.create_user(username, password, **extra_fields)
 
 
-
 class Account(AbstractBaseUser, PermissionsMixin):
     id = models.BigAutoField(primary_key=True, serialize=False, verbose_name="ID")
     username = models.CharField(max_length=255, unique=True, verbose_name="Никнейм")
@@ -49,8 +48,21 @@ class Account(AbstractBaseUser, PermissionsMixin):
         return f"{self.username}"
 
     class Meta:
-        db_table = 'Account'
+        db_table = 'account'
         verbose_name = "Пользователь"
+
+
+class Metrics(models.Model):
+    id = models.AutoField(primary_key=True, serialize=False, verbose_name="ID")
+    WER = models.FloatField(verbose_name="WER")
+    CER = models.FloatField(verbose_name="CER")
+    MER = models.FloatField(verbose_name="MER")
+    WIL = models.FloatField(verbose_name="WIL")
+    IWER = models.FloatField(verbose_name="IWER")
+
+    class Meta:
+        db_table = 'metrics'
+        verbose_name = "Метрика"
 
 
 class RecognitionData(models.Model):
@@ -64,21 +76,9 @@ class RecognitionData(models.Model):
     data_recognition = models.CharField(max_length=255, verbose_name="Данные распознавания")
 
     class Meta:
-        db_table = 'Recognition data'
+        db_table = 'recognition_data'
         verbose_name = "Данные"
 
-
-class Metric(models.Model):
-    id = models.AutoField(primary_key=True, serialize=False, verbose_name="ID")
-    WER = models.TextField(verbose_name="WER")
-    CER = models.TextField(verbose_name="CER")
-    MER = models.TextField(verbose_name="MER")
-    WIL = models.TextField(verbose_name="WIL")
-    IWER = models.TextField(verbose_name="IWER")
-
-    class Meta:
-        db_table = 'Metric'
-        verbose_name = "Метрика"
 
 class Recommendation(models.Model):
     id = models.AutoField(primary_key=True, serialize=False, verbose_name="ID")
@@ -89,5 +89,5 @@ class Recommendation(models.Model):
     date_recommendation = models.DateField(null=True, verbose_name="Дата рекомендации")
 
     class Meta:
-        db_table = 'Recommendation'
+        db_table = 'recommendation'
         verbose_name = "Рекомендация"

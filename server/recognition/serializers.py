@@ -1,23 +1,23 @@
 from rest_framework import serializers
-from .models import Account, RecognitionData, Metric, Recommendation
+from .models import Account, RecognitionData, Metrics, Recommendation
 
-class RecognitionDataSerializer(serializers.ModelSerializer):
+
+class MetricsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = RecognitionData
-        fields = '__all__'
-
-
-class MetricSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RecognitionData
+        model = Metrics
         fields = '__all__'
 
 
 class RecommendationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = RecognitionData
+        model = Recommendation
         fields = '__all__'
 
+
+class RecognitionDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecognitionData
+        fields = '__all__'
 
 # ==================================================================================
 # АККАУНТЫ

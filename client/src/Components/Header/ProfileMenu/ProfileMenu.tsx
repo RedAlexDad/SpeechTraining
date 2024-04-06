@@ -12,36 +12,36 @@ export default function ProfileMenu() {
     const {access_token} = useToken()
     const {is_authenticated, is_moderator, setUser} = useAuth()
 
-    // const auth = async () => {
-    //     const url = `${DOMEN}api/get_token/`;
-    //     await axios.post(url, {}, {
-    //         headers: {
-    //             "Content-type": "application/json; charset=UTF-8",
-    //             authorization: access_token,
-    //         },
-    //     })
-    //         .then(response => {
-    //             const user = {
-    //                 id_user: response.data.user_data["id"],
-    //                 is_authenticated: true,
-    //                 username: response.data.user_data["username"],
-    //                 is_moderator: response.data.user_data["is_moderator"],
-    //             };
-    //             setUser(user);
-    //         })
-    //         .catch(error => {
-    //             if (error.response.status == 401) {
-    //                 console.error("Не авторизирован");
-    //             } else {
-    //                 console.error("Ошибка!\n", error);
-    //             }
-    //         });
-    // };
+    const auth = async () => {
+        const url = `${DOMEN}api/get_token/`;
+        await axios.post(url, {}, {
+            headers: {
+                "Content-type": "application/json; charset=UTF-8",
+                authorization: access_token,
+            },
+        })
+            .then(response => {
+                const user = {
+                    id_user: response.data.account["id"],
+                    is_authenticated: true,
+                    username: response.data.account["username"],
+                    is_moderator: response.data.account["is_moderator"],
+                };
+                setUser(user);
+            })
+            .catch(error => {
+                if (error.response.status == 401) {
+                    console.error("Не авторизирован");
+                } else {
+                    console.error("Ошибка!\n", error);
+                }
+            });
+    };
 
     useEffect(() => {
-        // if (!is_authenticated) {
-            // auth();
-        // }
+        if (!is_authenticated) {
+            auth();
+        }
     }, [is_authenticated]);
 
 
@@ -55,24 +55,21 @@ export default function ProfileMenu() {
                         <span className="item">Главная</span>
                     </Link>
                     {!is_moderator &&
-                        <Link to="/geographical_object/" className="menu-item" style={{textDecoration: 'none'}}>
+                        <Link to="/speech/" className="menu-item" style={{textDecoration: 'none'}}>
                             <span className="item">Проверьте свою речь</span>
                         </Link>
                     }
                     {!is_moderator &&
-                        <Link to="/geographical_object/" className="menu-item" style={{textDecoration: 'none'}}>
+                        <Link to="/hearing/" className="menu-item" style={{textDecoration: 'none'}}>
                             <span className="item">Проверьте свой слух</span>
                         </Link>
                     }
                     {is_moderator &&
-                        <Link to="/geographical_object/moderator/" className="menu-item"
+                        <Link to="/analysis/" className="menu-item"
                               style={{textDecoration: 'none'}}>
                             <span className="item">Анализ данных</span>
                         </Link>
                     }
-                    <Link to="/mars_station/" className="menu-item" style={{textDecoration: 'none'}}>
-                        <span className="item">Марсианские станции</span>
-                    </Link>
                     <UserInfo/>
                 </div>
                 <Hamburger isOpen={isOpen} setIsOpen={setIsOpen}/>

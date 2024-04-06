@@ -118,6 +118,8 @@ class LoginView(APIView):
 
             # Формирование ответа
             response_data = account_serializer.data
+            response_data['access_token'] = access_token
+
             if error_message:
                 response_data['error_message'] = error_message
 

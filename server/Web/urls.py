@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-# from recognition.recognition_speech_automatic import TranscriptionView
+from recognition.recognition_speech_automatic import TranscriptionView
 from recognition import account
 from rest_framework import routers
 
@@ -26,7 +26,7 @@ urlpatterns = [
     path('api/', include(router.urls)),
 
     # Распознавание речи
-    # path('api/transcribe/', TranscriptionView.as_view(), name='transcribe'),
+    path('api/transcribe/', TranscriptionView.as_view(), name='transcribe'),
 ]
 
 # Авторизация, аутентификация, регистрация, выход с учетной записи

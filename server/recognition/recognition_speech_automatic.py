@@ -1,16 +1,19 @@
 import os
+from datetime import datetime
 
+from django.contrib.auth import authenticate
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from transformers import SpeechEncoderDecoderModel, Wav2Vec2Processor
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import RecognitionData, Metric, Account
+from .models import RecognitionData, Metrics, Account
 
 from rest_framework.permissions import AllowAny
-from .permissions import IsModerator
-from .serializers import RecognitionDataSerializer, AccountSerializer
+from .permissions import IsModerator, get_access_token, get_jwt_payload
+from .serializers import RecognitionDataSerializer, AccountSerializer, MetricsSerializer, \
+    AccountAuthorizationSerializer, AccountSerializerInfo
 
 import torch
 import sounddevice as sd
@@ -55,6 +58,7 @@ else:
     model.save_pretrained(PATH_MODEL)
     print(f'Успешно модель скачана и сохранена в пути {PATH_MODEL}')
 
+
 class TranscriptionView(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [AllowAny]
@@ -65,7 +69,6 @@ class TranscriptionView(APIView):
         # Получим предложения из запроса
         sentences = request.data.get('sentences', None)
         reference_text = " ".join(sentence.lower() for sentence in sentences)
-
         # Запись голоса
         audio_data = self.record_audio()
         # Распознавание голоса
@@ -75,18 +78,10 @@ class TranscriptionView(APIView):
         print("Распознанный текст:", transcription_text)
 
         # Проверяем на точность произношения
-        wer_score, cer_score, mer_score, wil_score, iwer_score = self.calculate_metrics(reference_text,
-                                                                                        transcription_text)
-        print(
-            f"WER: {wer_score:.2f}, "
-            f"CER: {cer_score:.2f}, "
-            f"MER: {mer_score:.2f}, "
-            f"WIL: {wil_score:.2f}, "
-            f"IWER: {iwer_score:.2f};"
-        )
+        wer_score, cer_score, mer_score, wil_score, iwer_score = self.calculate_metrics(reference_text, transcription_text)
 
         # Создаем объект метрики
-        metric = Metric.objects.create(
+        metrics = Metrics.objects.create(
             WER=wer_score,
             CER=cer_score,
             MER=mer_score,
@@ -94,15 +89,44 @@ class TranscriptionView(APIView):
             IWER=iwer_score
         )
 
+        account_serializer = self.get_info_account(request=request)
+
         # Сохраним транскрипцию в базе данных
         transcription = RecognitionData(
             text=transcription_text,
             transcription_text=transcription_text,
-            id_metric=metric.id,
+            data_recognition=audio_data,
+            date_recoding=datetime.now().date(),
+            id_metric=metrics.id,
+            id_client=account_serializer.get('id') if account_serializer else None
         )
         transcription.save()
-        serializer = RecognitionDataSerializer(transcription)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        transcription_serializer = RecognitionDataSerializer(transcription)
+        metrics_serializer = MetricsSerializer(metrics)
+
+        # Добавим данные метрики к данным транскрипции
+        serialized_data = transcription_serializer.data
+        serialized_data['metrics'] = metrics_serializer.data
+
+        return Response(serialized_data, status=status.HTTP_201_CREATED)
+
+    def get_info_account(self, request=None):
+        error_message, access_token = get_access_token(request)
+
+        if access_token is None:
+            return Response(error_message, status=status.HTTP_401_UNAUTHORIZED)
+        payload = get_jwt_payload(access_token)
+        account = Account.objects.filter(id=payload['id']).first()
+
+        if account is None:
+            return Response({'message': 'Такого аккаунта не найдено. Проверьте свои учетные данные'},
+                            status=status.HTTP_401_UNAUTHORIZED)
+
+        # Получение данных аккаунта
+        account_serializer = AccountSerializerInfo(account, many=False).data
+
+        return account_serializer
 
     # Функция записи голоса и возврата в виде массива для предсказания
     def record_audio(self, duration=3, sampling_rate=16000):
@@ -146,7 +170,10 @@ class TranscriptionView(APIView):
         # Подсчет WIL
         wil_score = wil(reference_text, transcription_text)
         # По
-        iwer_score = self.iwer(reference_text, transcription_text)
+        iwer_score = 1 - self.iwer(reference_text, transcription_text)
+
+        print(f"WER: {wer_score:.2f}, ", f"CER: {cer_score:.2f}, ", f"MER: {mer_score:.2f}, ",
+              f"WIL: {wil_score:.2f}, ", f"IWER: {iwer_score:.2f};")
 
         return wer_score, cer_score, mer_score, wil_score, iwer_score
 
@@ -167,10 +194,10 @@ class TranscriptionView(APIView):
         # Находим количество слов в предложении-эталоне
         total_words = len(reference_words)
 
-        # Считаем количество совпадающих слов
-        matching_words = sum(1 for ref, hyp in zip(reference_words, hypothesis_words) if ref == hyp)
+        # Считаем количество неправильно распознанных слов
+        incorrect_words = sum(1 for ref, hyp in zip(reference_words, hypothesis_words) if ref != hyp)
 
         # Вычисляем Inflectional Word Error Rate (IWER)
-        iwer_score = (total_words - matching_words) / total_words
+        iwer_score = incorrect_words / total_words
 
         return iwer_score
