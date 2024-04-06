@@ -24,10 +24,10 @@ export default function SignIn() {
             .then(response => {
                 setAccessToken(response.data['access_token'])
                 const user = {
-                    id_user: response.data.user["id"],
+                    id_user: response.data["id"],
                     is_authenticated: true,
-                    username: response.data.user["username"],
-                    is_moderator: response.data.user["is_moderator"],
+                    username: response.data["username"],
+                    is_moderator: response.data["is_moderator"],
                 }
                 setUser(user)
                 navigate("/home");

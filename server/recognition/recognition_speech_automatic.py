@@ -1,12 +1,16 @@
 import os
 
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from transformers import SpeechEncoderDecoderModel, Wav2Vec2Processor
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import RecognitionData, Metric
-from .serializers import RecognitionDataSerializer
+from .models import RecognitionData, Metric, Account
+
+from rest_framework.permissions import AllowAny
+from .permissions import IsModerator
+from .serializers import RecognitionDataSerializer, AccountSerializer
 
 import torch
 import sounddevice as sd
@@ -14,45 +18,48 @@ import sounddevice as sd
 # Для теста WER - Word Error Rate, CER - Character Error Rate, MER - Match Error Rate, WIL - Word Information Lost
 from jiwer import wer, cer, mer, wil
 
+# НЕ УБИРАЙТЕ ЭТУ ЯЧЕЙКУ, ИНАЧНЕ БУДЕТ НЕПРАВИЛЬНО ИНИЦИАЛИЗИРОВАНО ОКРУЖЕНИЕ, ЧТО И ВЫВЕДЕТ ОШИБКУ ВЕРСИИ ptxas!!!
+os.environ['PATH'] = '/usr/local/cuda-12.3/bin:' + os.environ['PATH']
+
+LANG_ID = 'ru'
+MODEL_ID = 'bond005/wav2vec2-mbart50-ru'
+PATH_MODEL = '/home/redalexdad/recognition_speech/wav2vec2-mbart50-ru'
+device = 'cpu'
+
+# Проверка доступности GPU
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Настройка количества процессоров и памяти
+NUM_PROCESSES = max(1, os.cpu_count())
+# print(f"Using device: {device}")
+
+# Устанавливает максимальное количество доступной видеопамяти (например, 75%)
+# torch.cuda.set_per_process_memory_fraction(0.75)
+# Включает динамическое выделение памяти на GPU
+# torch.cuda.set_per_process_memory_growth(True)
+
+# Проверка наличия модели в локальном пути
+if os.path.exists(PATH_MODEL):
+    # Загрузка процессора из локального пути
+    processor = Wav2Vec2Processor.from_pretrained(PATH_MODEL)
+
+    # Загрузка модели из локального пути
+    model = SpeechEncoderDecoderModel.from_pretrained(PATH_MODEL).to(device)
+    print('Успешно модель загружена')
+else:
+    # Загрузка процессора из сети и сохранение в локальный путь
+    processor = Wav2Vec2Processor.from_pretrained(MODEL_ID)
+    processor.save_pretrained(PATH_MODEL)
+
+    # Загрузка модели из сети и сохранение в локальный путь
+    model = SpeechEncoderDecoderModel.from_pretrained(MODEL_ID).to(device)
+    model.save_pretrained(PATH_MODEL)
+    print(f'Успешно модель скачана и сохранена в пути {PATH_MODEL}')
+
 class TranscriptionView(APIView):
-    def __init__(self, MODEL_ID: str = "bond005/wav2vec2-mbart50-ru", device: str = 'cpu', **kwargs):
-        super().__init__(**kwargs)
-        # НЕ УБИРАЙТЕ ЭТУ ЯЧЕЙКУ, ИНАЧНЕ БУДЕТ НЕПРАВИЛЬНО ИНИЦИАЛИЗИРОВАНО ОКРУЖЕНИЕ, ЧТО И ВЫВЕДЕТ ОШИБКУ ВЕРСИИ ptxas!!!
-        os.environ['PATH'] = '/usr/local/cuda-12.3/bin:' + os.environ['PATH']
-
-        self.LANG_ID = "ru"
-        self.MODEL_ID = MODEL_ID
-        self.PATH_MODEL = '/home/redalexdad/recognition_speech/wav2vec2-mbart50-ru'
-        self.device = device
-
-        # Проверка доступности GPU
-        # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        # Настройка количества процессоров и памяти
-        self.NUM_PROCESSES = max(1, os.cpu_count())
-        # print(f"Using device: {device}")
-
-        # Устанавливает максимальное количество доступной видеопамяти (например, 75%)
-        # torch.cuda.set_per_process_memory_fraction(0.75)
-        # Включает динамическое выделение памяти на GPU
-        # torch.cuda.set_per_process_memory_growth(True)
-
-        # Проверка наличия модели в локальном пути
-        if os.path.exists(self.PATH_MODEL):
-            # Загрузка процессора из локального пути
-            self.processor = Wav2Vec2Processor.from_pretrained(self.PATH_MODEL)
-
-            # Загрузка модели из локального пути
-            self.model = SpeechEncoderDecoderModel.from_pretrained(self.PATH_MODEL).to(device)
-            print('Успешно модель загружена')
-        else:
-            # Загрузка процессора из сети и сохранение в локальный путь
-            self.processor = Wav2Vec2Processor.from_pretrained(MODEL_ID)
-            self.processor.save_pretrained(self.PATH_MODEL)
-
-            # Загрузка модели из сети и сохранение в локальный путь
-            self.model = SpeechEncoderDecoderModel.from_pretrained(MODEL_ID).to(device)
-            self.model.save_pretrained(self.PATH_MODEL)
-            print(f'Успешно модель скачана и сохранена в пути {self.PATH_MODEL}')
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [AllowAny]
+    model_class = Account
+    serializer_class = AccountSerializer
 
     def post(self, request, format=None):
         # Получим предложения из запроса
@@ -62,7 +69,7 @@ class TranscriptionView(APIView):
         # Запись голоса
         audio_data = self.record_audio()
         # Распознавание голоса
-        transcription_text = self.transcribe_audio(audio_data, self.model, self.processor, self.device)
+        transcription_text = self.transcribe_audio(audio_data, model, processor, device)
 
         print("Канонический текст:", reference_text)
         print("Распознанный текст:", transcription_text)
@@ -74,8 +81,8 @@ class TranscriptionView(APIView):
             f"WER: {wer_score:.2f}, "
             f"CER: {cer_score:.2f}, "
             f"MER: {mer_score:.2f}, "
-            f"WIL: {wil_score:.2f}"
-            f"IWER: {iwer_score:.2f}"
+            f"WIL: {wil_score:.2f}, "
+            f"IWER: {iwer_score:.2f};"
         )
 
         # Создаем объект метрики
@@ -119,7 +126,7 @@ class TranscriptionView(APIView):
                 # Декодирование предсказаний
                 transcription = processor.batch_decode(
                     predicted_ids,
-                    num_processes=self.NUM_PROCESSES,
+                    num_processes=NUM_PROCESSES,
                     skip_special_tokens=True
                 )[0]
 
@@ -164,6 +171,6 @@ class TranscriptionView(APIView):
         matching_words = sum(1 for ref, hyp in zip(reference_words, hypothesis_words) if ref == hyp)
 
         # Вычисляем Inflectional Word Error Rate (IWER)
-        iwer_score = (total_words - matching_words) / total_words * 100
+        iwer_score = (total_words - matching_words) / total_words
 
         return iwer_score

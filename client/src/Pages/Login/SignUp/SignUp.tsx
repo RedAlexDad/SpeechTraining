@@ -28,9 +28,9 @@ export default function SignUp() {
                 setAccessToken(response.data['access_token'])
                 const permissions = {
                     is_authenticated: true,
-                    id: response.data.user["id"],
-                    username: response.data.user["username"],
-                    is_moderator: response.data.user["is_moderator"],
+                    id: response.data["id"],
+                    username: response.data["username"],
+                    is_moderator: response.data["is_moderator"],
                 }
                 setUser(permissions)
                 navigate("/home/");
@@ -63,19 +63,17 @@ export default function SignUp() {
             const formData = new FormData(formElement);
             const username = formData.get('username') as string;
             const password = formData.get('password') as string;
-            const full_name = formData.get('full_name') as string;
-            const post = formData.get('post') as string;
-            const name_organization = formData.get('name_organization') as string;
-            const address = formData.get('address') as string;
+            const name = formData.get('name') as string;
+            const lastname = formData.get('lastname') as string;
+            const fathername = formData.get('fathername') as string;
 
             const data = {
                 username: username,
                 password: password,
                 is_moderator: false,
-                full_name: full_name,
-                post: post,
-                name_organization: name_organization,
-                address: address
+                name: name,
+                lastname: lastname,
+                fathername: fathername,
             }
             await register(data)
         }
@@ -99,19 +97,15 @@ export default function SignUp() {
                 </div>
                 <div className="input">
                     <FaUser className="icon"/>
-                    <input type="text" placeholder="ФИО" name="full_name"/>
+                    <input type="text" placeholder="Фамилия" name="name"/>
                 </div>
                 <div className="input">
                     <FaSignsPost className="icon"/>
-                    <input type="text" placeholder="Должность" name="post"/>
+                    <input type="text" placeholder="Имя" name="lastname"/>
                 </div>
                 <div className="input">
                     <FaRegBuilding className="icon"/>
-                    <input type="text" placeholder="Название организации" name="name_organization"/>
-                </div>
-                <div className="input">
-                    <GrMap className="icon"/>
-                    <input type="text" placeholder="Адрес" name="address"/>
+                    <input type="text" placeholder="Отчество" name="fathername"/>
                 </div>
                 <div className="sign-in-link-container">
                     <Link to="/auth/login/" style={{textDecoration: 'none'}}>

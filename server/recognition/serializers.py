@@ -27,7 +27,7 @@ class RecommendationSerializer(serializers.ModelSerializer):
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ['id', 'username', 'password', 'is_moderator']
+        fields = ['id', 'username', 'password', 'is_moderator', 'name', 'lastname', 'fathername']
 
 
 class AccountSerializerInfo(serializers.ModelSerializer):
@@ -37,10 +37,10 @@ class AccountSerializerInfo(serializers.ModelSerializer):
 
 
 # Для аутенфикации, авторизации и регистрации
-class UserRegisterSerializer(serializers.ModelSerializer):
+class AccountRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ['id', 'username', 'password', 'is_moderator']
+        fields = ['id', 'username', 'password', 'is_moderator', 'name', 'lastname', 'fathername']
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -66,6 +66,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return instance
 
 
-class UserAuthorizationSerializer(serializers.Serializer):
+class AccountAuthorizationSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     password = serializers.CharField(required=True)

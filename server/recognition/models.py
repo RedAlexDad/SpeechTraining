@@ -49,7 +49,7 @@ class Account(AbstractBaseUser, PermissionsMixin):
         return f"{self.username}"
 
     class Meta:
-        db_table = 'account'
+        db_table = 'Account'
         verbose_name = "Пользователь"
 
 
@@ -64,7 +64,7 @@ class RecognitionData(models.Model):
     data_recognition = models.CharField(max_length=255, verbose_name="Данные распознавания")
 
     class Meta:
-        db_table = 'recognition_data'
+        db_table = 'Recognition data'
         verbose_name = "Данные"
 
 
@@ -77,7 +77,7 @@ class Metric(models.Model):
     IWER = models.TextField(verbose_name="IWER")
 
     class Meta:
-        db_table = 'metric'
+        db_table = 'Metric'
         verbose_name = "Метрика"
 
 class Recommendation(models.Model):
@@ -89,5 +89,5 @@ class Recommendation(models.Model):
     date_recommendation = models.DateField(null=True, verbose_name="Дата рекомендации")
 
     class Meta:
-        db_table = 'recommendation'
+        db_table = 'Recommendation'
         verbose_name = "Рекомендация"
