@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from recognition.views import TranscriptionView
+from recognition.recognition_speech_automatic import TranscriptionView
 from rest_framework import routers
 
 router = routers.DefaultRouter()

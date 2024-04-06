@@ -9,7 +9,7 @@ CREATE TABLE account
 );
 
 
-CREATE TABLE recognition_transcription
+CREATE TABLE recognition_data
 (
     id                 SERIAL PRIMARY KEY,
     text               TEXT,
@@ -42,20 +42,20 @@ CREATE TABLE recommendation
 );
 
 -- СВЯЗЫВАНИЕ БД ВНЕШНИМИ КЛЮЧАМИ --
-ALTER TABLE recognition_transcription
-    ADD CONSTRAINT FR_recognition_transcription_of_account
+ALTER TABLE recognition_data
+    ADD CONSTRAINT FR_recognition_data_of_account
         FOREIGN KEY (id_client) REFERENCES account (id);
 
-ALTER TABLE recognition_transcription
-    ADD CONSTRAINT FR_recognition_transcription_of_metric
+ALTER TABLE recognition_data
+    ADD CONSTRAINT FR_recognition_data_of_metric
         FOREIGN KEY (id_metric) REFERENCES metric (id);
 
-ALTER TABLE recognition_transcription
-    ADD CONSTRAINT FR_recognition_transcription_of_recommendation
+ALTER TABLE recognition_data
+    ADD CONSTRAINT FR_recognition_data_of_recommendation
         FOREIGN KEY (id_recommendation) REFERENCES recommendation (id);
 
 ALTER TABLE recommendation
-    ADD CONSTRAINT FR_recognition_transcription_of_recommendation
+    ADD CONSTRAINT FR_recognition_data_of_recommendation
         FOREIGN KEY (id_logodedist) REFERENCES account (id);
 
 -- Данные для таблицы "account"
@@ -86,13 +86,13 @@ VALUES (1, 'Улучшение', 'Неплохо, продолжай в том �
 SELECT *
 FROM recommendation;
 
--- Данные для таблицы "recognition_transcription"
-INSERT INTO recognition_transcription (id_client, text, date_recoding, transcription_text, id_metric,
+-- Данные для таблицы "recognition_data"
+INSERT INTO recognition_data (id_client, text, date_recoding, transcription_text, id_metric,
                                        id_recommendation)
 VALUES (1, 'Привет, как дела?', '2023-11-04', 'Привет, как дела?', 1, 1),
        (2, 'Это тестовая фраза.', '2023-12-04', 'Это тестовая фраза.', 2, 2),
        (3, 'Опять проверяем работу.', '2023-05-04', 'Опять проверяем работу.', 3, 3);
 
 SELECT *
-FROM recognition_transcription;
+FROM recognition_data;
 
