@@ -78,7 +78,6 @@ export default function HearingPage() {
                 "Content-type": "application/json; charset=UTF-8",
                 authorization: access_token,
             },
-            responseType: 'blob'
         })
             .then(response => {
                 const data = response.data;
@@ -95,6 +94,34 @@ export default function HearingPage() {
                 console.error('Ошибка при выполнении запроса на синтез речи:', error);
                 setIsSynthesized(false);
                 setIsRecording(false); // Устанавливаем флаг окончания синтеза речи
+            });
+    };
+
+    // Функция для проверки своего слуха своим голосом
+    const startRecording = () => {
+        // Здесь вы можете добавить код для начала записи
+        setIsRecording(true);
+        const currentCollection = sentencesCollections[currentCollectionIndex];
+
+        axios.post('http://127.0.0.1:8000/api/transcribe_by_synthesis/', {
+            sentences: currentCollection,
+        }, {
+            headers: {
+                "Content-type": "application/json; charset=UTF-8",
+                authorization: access_token,
+            },
+        })
+            .then(response => {
+                const data = response.data;
+                console.log(data);
+                setUserInput(data.transcription_text);
+            })
+            .catch(error => {
+                console.error('Ошибка при выполнении запроса:', error);
+            })
+            .finally(() => {
+                // Здесь вы можете добавить код для завершения записи
+                setIsRecording(false);
             });
     };
 
@@ -182,6 +209,13 @@ export default function HearingPage() {
                     onClick={switchCollection}
                 >
                     Переключить коллекцию случайных словарей
+                </Button>
+                <Button
+                    variant="outlined"
+                    sx={{color: 'white', borderColor: 'white'}}
+                    onClick={startRecording} disabled={isRecording}
+                >
+                    {isRecording ? 'Идет запись...' : 'Попробовать заполнить поля своим голосом'}
                 </Button>
             </div>
         </>

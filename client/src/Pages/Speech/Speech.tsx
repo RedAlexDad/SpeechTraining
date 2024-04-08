@@ -35,7 +35,9 @@ export default function SpeechPage() {
         setIsRecording(true);
         const currentCollection = sentencesCollections[currentCollectionIndex];
 
-        axios.post('http://127.0.0.1:8000/api/transcribe/', {sentences: currentCollection}, {
+        axios.post('http://127.0.0.1:8000/api/transcribe/', {
+            sentences: currentCollection,
+        }, {
             headers: {
                 "Content-type": "application/json; charset=UTF-8",
                 authorization: access_token,
@@ -63,6 +65,7 @@ export default function SpeechPage() {
                 setIsRecording(false);
             });
     };
+
     const switchCollection = () => {
         setCurrentCollectionIndex((prevIndex) => (prevIndex + 1) % sentencesCollections.length);
     };

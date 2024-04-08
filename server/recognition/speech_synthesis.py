@@ -14,8 +14,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
 from recognition.DB_Minio import DB_Minio
-from recognition.models import SynthesisData
-from recognition.serializers import SynthesisDataSerializer
+from recognition.models import SynthesisData, DataRecognitionAndSynthesis, Account
+from recognition.permissions import get_access_token, get_jwt_payload, get_info_account
+from recognition.serializers import SynthesisDataSerializer, AccountSerializerInfo
 
 
 @api_view(['POST'])
@@ -64,7 +65,7 @@ def create_speech_synthesis(request):
 @permission_classes([AllowAny])
 def test_speech_synthesis(request):
     # Получаем текст из запроса
-    text_input = request.data.get('text_input', '')
+    sentences = request.data.get('sentences', '')
     text_synthesis = request.data.get('text_synthesis', '')
     text_synthesis = " ".join(sentence.lower() for sentence in text_synthesis)
 
@@ -79,6 +80,13 @@ def test_speech_synthesis(request):
         text_input=text_input,
         date_synthesis=datetime.now().date(),
         wer=wer(text_input, text_synthesis),
+    )
+
+    account_serializer = get_info_account(request=request)
+
+    DataRecognitionAndSynthesis.objects.create(
+        id_client=account_serializer['id'] if account_serializer is not None else None,
+        id_synthesis=synthesis_data.id,
     )
 
     synthesis_data_serialized = SynthesisDataSerializer(synthesis_data)

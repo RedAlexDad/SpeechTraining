@@ -9,6 +9,8 @@ from rest_framework.response import Response
 import jwt
 from datetime import datetime, timezone
 
+from recognition.serializers import AccountSerializerInfo
+
 KEY = settings.JWT["SIGNING_KEY"]
 ALGORITHM = settings.JWT["ALGORITHM"]
 ACCESS_TOKEN_LIFETIME = settings.JWT["ACCESS_TOKEN_LIFETIME"]
@@ -189,3 +191,20 @@ class IsModerator(BasePermission):
                 return False
 
         return user.is_moderator
+
+def get_info_account(request=None):
+    error_message, access_token = get_access_token(request)
+
+    if access_token is None or access_token == 'undefined':
+        return None
+
+    payload = get_jwt_payload(access_token)
+    account = Account.objects.filter(id=payload['id']).first()
+
+    if account is None:
+        return None
+
+    # Получение данных аккаунта
+    account_serializer = AccountSerializerInfo(account, many=False).data
+
+    return account_serializer
