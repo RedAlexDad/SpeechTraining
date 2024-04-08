@@ -33,11 +33,47 @@ export default function HearingPage() {
         // Добавьте больше коллекций по вашему усмотрению
     ];
 
-    const startRecording = () => {
+    const CreateSynthesis = () => {
         setIsRecording(true);
         const currentCollection = sentencesCollections[currentCollectionIndex];
 
         axios.post('http://127.0.0.1:8000/api/create_speech_synthesis/', {text: currentCollection}, {
+            headers: {
+                "Content-type": "application/json; charset=UTF-8",
+                authorization: access_token,
+            },
+            responseType: 'blob'
+        })
+            .then(response => {
+                const data = response.data;
+                const blob = new Blob([data], {type: 'audio/mpeg'}); // Создаем Blob из полученных данных
+                const audio = new Audio(URL.createObjectURL(blob)); // Создаем аудио из Blob
+                audio.play();
+
+                setCollectionWords(currentCollection); // Сохраняем слова из текущей коллекции в состоянии
+                setAudioBlob(new Blob([data])); // Сохраняем Blob в переменную
+                setIsSynthesized(true); // Устанавливаем флаг успешного синтеза
+                setIsRecording(false); // Устанавливаем флаг окончания синтеза речи
+            })
+            .catch(error => {
+                console.error('Ошибка при выполнении запроса на синтез речи:', error);
+                setIsSynthesized(false);
+                setIsRecording(false); // Устанавливаем флаг окончания синтеза речи
+            });
+    };
+
+    // Функция для обработки проверки своего слуха
+    const SaveResult = () => {
+        setIsRecording(true);
+        setIsSynthesized(false);
+        setShowCollectionWords(true); // После нажатия на кнопку "Проверить свой слух" показываем слова из коллекции
+        setIsInputClosed(true); // Закрываем input
+        const currentCollection = sentencesCollections[currentCollectionIndex];
+
+        axios.post('http://127.0.0.1:8000/api/test_speech_synthesis/', {
+            text_synthesis: currentCollection,
+            text_input: userInput
+        }, {
             headers: {
                 "Content-type": "application/json; charset=UTF-8",
                 authorization: access_token,
@@ -85,13 +121,6 @@ export default function HearingPage() {
         ));
     };
 
-    // Функция для обработки проверки своего слуха
-    const handleCheckMyHearing = () => {
-        setIsSynthesized(false);
-        setShowCollectionWords(true); // После нажатия на кнопку "Проверить свой слух" показываем слова из коллекции
-        setIsInputClosed(true); // Закрываем input
-    };
-
     useEffect(() => {
         // При изменении коллекции обновляем текст для синтеза
         setTextToSynthesize(sentencesCollections[currentCollectionIndex][0]);
@@ -121,9 +150,9 @@ export default function HearingPage() {
                     <Button
                         variant="outlined"
                         sx={{color: 'black', borderColor: 'white'}}
-                        onClick={handleCheckMyHearing} disabled={!isSynthesized}
+                        onClick={SaveResult} disabled={isInputClosed}
                     >
-                        Проверить свой слух
+                        {isInputClosed ? 'Повторить попытку в другом словаре' : 'Проверить свой слух'}
                     </Button>
                 </div>
             </div>
@@ -132,7 +161,7 @@ export default function HearingPage() {
                     <Button
                         variant="outlined"
                         sx={{color: 'white', borderColor: 'white'}}
-                        onClick={startRecording} disabled={isRecording}
+                        onClick={CreateSynthesis} disabled={isRecording}
                     >
                         {isRecording ? 'Идет синтез речи...' : 'Синтезировать речь'}
                     </Button>

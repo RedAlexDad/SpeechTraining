@@ -8,12 +8,12 @@ from transformers import SpeechEncoderDecoderModel, Wav2Vec2Processor
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import RecognitionData, Metrics, Account
+from .models import Account, RecognitionData, DataRecognitionAndSynthesis
 
 from rest_framework.permissions import AllowAny
 from .permissions import IsModerator, get_access_token, get_jwt_payload
-from .serializers import RecognitionDataSerializer, AccountSerializer, MetricsSerializer, \
-    AccountAuthorizationSerializer, AccountSerializerInfo
+from .serializers import RecognitionDataSerializer, AccountSerializer, \
+    AccountAuthorizationSerializer, AccountSerializerInfo, DataRecognitionAndSynthesisSerializer
 
 import torch
 import sounddevice as sd
@@ -80,34 +80,31 @@ class TranscriptionView(APIView):
         # Проверяем на точность произношения
         wer_score, cer_score, mer_score, wil_score, iwer_score = self.calculate_metrics(reference_text, transcription_text)
 
-        # Создаем объект метрики
-        metrics = Metrics.objects.create(
-            WER=wer_score,
-            CER=cer_score,
-            MER=mer_score,
-            WIL=wil_score,
-            IWER=iwer_score
-        )
-
         account_serializer = self.get_info_account(request=request)
 
         # Сохраним транскрипцию в базе данных
-        transcription = RecognitionData(
-            text=transcription_text,
-            transcription_text=transcription_text,
+        recognition_data = RecognitionData.objects.create(
             data_recognition=audio_data,
+            transcription_text=transcription_text,
+            text_for_check=reference_text,
             date_recoding=datetime.now().date(),
-            id_metric=metrics.id,
-            id_client=account_serializer.get('id') if account_serializer else None
+            wer=wer_score,
+            cer=cer_score,
+            mer=mer_score,
+            wil=wil_score,
+            iwer=iwer_score
         )
-        transcription.save()
 
-        transcription_serializer = RecognitionDataSerializer(transcription)
-        metrics_serializer = MetricsSerializer(metrics)
+        data = DataRecognitionAndSynthesis.objects.create(
+            id_client=account_serializer['id'] if account_serializer['id'] is not None else None,
+            id_recognition=recognition_data.id,
+        )
+
+        recognition_data_serializer = RecognitionDataSerializer(recognition_data)
+        data_serializer = DataRecognitionAndSynthesisSerializer(data)
 
         # Добавим данные метрики к данным транскрипции
-        serialized_data = transcription_serializer.data
-        serialized_data['metrics'] = metrics_serializer.data
+        serialized_data = recognition_data_serializer.data
 
         return Response(serialized_data, status=status.HTTP_201_CREATED)
 

@@ -44,13 +44,13 @@ export default function SpeechPage() {
             .then(response => {
                 const data = response.data;
                 console.log(data);
-                setTranscription(data.text);
+                setTranscription(data.text_for_check);
                 setAccuracy({
-                    wer: data.metrics.WER,
-                    cer: data.metrics.CER,
-                    mer: data.metrics.MER,
-                    wil: data.metrics.WIL,
-                    iwer: data.metrics.IWER
+                    wer: data.wer,
+                    cer: data.cer,
+                    mer: data.mer,
+                    wil: data.wil,
+                    iwer: data.iwer
                 });
                 // console.log(data);
             })
