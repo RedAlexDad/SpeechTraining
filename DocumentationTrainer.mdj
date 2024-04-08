@@ -1355,7 +1355,7 @@
 								"$ref": "AAAAAAGOsufTCljCgm8="
 							},
 							"name": "WER",
-							"type": "DOUBLE",
+							"type": "FLOAT",
 							"length": 0
 						},
 						{
@@ -1365,7 +1365,7 @@
 								"$ref": "AAAAAAGOsufTCljCgm8="
 							},
 							"name": "CER",
-							"type": "DOUBLE",
+							"type": "FLOAT",
 							"length": 0
 						},
 						{
@@ -1375,7 +1375,7 @@
 								"$ref": "AAAAAAGOsufTCljCgm8="
 							},
 							"name": "MER",
-							"type": "DOUBLE",
+							"type": "FLOAT",
 							"length": 0
 						},
 						{
@@ -1385,7 +1385,7 @@
 								"$ref": "AAAAAAGOsufTCljCgm8="
 							},
 							"name": "WIL",
-							"type": "DOUBLE",
+							"type": "FLOAT",
 							"length": 0
 						},
 						{
@@ -1395,7 +1395,7 @@
 								"$ref": "AAAAAAGOsufTCljCgm8="
 							},
 							"name": "IWER",
-							"type": "DOUBLE",
+							"type": "FLOAT",
 							"length": 0
 						}
 					]
