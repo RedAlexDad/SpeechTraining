@@ -9,11 +9,11 @@ from transformers import SpeechEncoderDecoderModel, Wav2Vec2Processor
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Account, RecognitionData, DataRecognitionAndSynthesis
+from recognition.models import Account, RecognitionData, DataRecognitionAndSynthesis
 
 from rest_framework.permissions import AllowAny
-from .permissions import IsModerator, get_access_token, get_jwt_payload, get_info_account
-from .serializers import RecognitionDataSerializer, AccountSerializer, \
+from recognition.permissions import IsModerator, get_access_token, get_jwt_payload, get_info_account
+from recognition.serializers import RecognitionDataSerializer, AccountSerializer, \
     AccountAuthorizationSerializer, AccountSerializerInfo, DataRecognitionAndSynthesisSerializer
 
 import torch

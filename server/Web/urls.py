@@ -15,9 +15,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from recognition.recognition_speech_automatic import *
-from recognition.speech_synthesis import *
-from recognition import account
+# from recognition.recognition_speech_automatic import *
+from recognition.views.speech_synthesis import *
+from recognition.views.text import *
+from recognition.views import account
 from rest_framework import routers
 
 router = routers.DefaultRouter()
@@ -25,16 +26,26 @@ router = routers.DefaultRouter()
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('api/', include(router.urls)),
+]
 
+# Распознавание речи, синтез речи и тест на прослушку
+urlpatterns += [
+    #     Получение текста по ID
+    path('api/text/<int:pk>/', text_by_pk, name='text_by_pk'),
+    #     Получение текста и темы
+    path('api/text/', texts, name='texts'),
+]
+
+# Распознавание речи, синтез речи и тест на прослушку
+urlpatterns += [
     # Распознавание речи
-    path('api/transcribe/', transcription, name='transcribe'),
-
+    # path('api/transcribe/', transcription, name='transcribe'),
     # Создать синтез речи POST
     path('api/create_speech_synthesis/', create_speech_synthesis, name='create_speech_synthesis'),
     # Тест на прослушку POST
     path('api/test_speech_synthesis/', test_speech_synthesis, name='test_speech_synthesis'),
     # Получить существующий синтез речи GET
-    path('api/get_speech_synthesis/', get_speech_synthesis, name='get_speech_synthesis'),
+    path('api/repeat_speech_synthesis/', get_speech_synthesis, name='repeat_speech_synthesis'),
 ]
 
 # Авторизация, аутентификация, регистрация, выход с учетной записи

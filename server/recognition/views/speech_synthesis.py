@@ -65,9 +65,9 @@ def create_speech_synthesis(request):
 @permission_classes([AllowAny])
 def test_speech_synthesis(request):
     # Получаем текст из запроса
-    sentences = request.data.get('sentences', '')
-    text_synthesis = request.data.get('text_synthesis', '')
-    text_synthesis = " ".join(sentence.lower() for sentence in text_synthesis)
+    word = request.data.get('word', '')
+    word_input = request.data.get('word_input', '')
+    word_input = " ".join(sentence.lower() for sentence in word_input)
 
     minio = DB_Minio()
     # Получаем аудиофайл из хранилища Minio
@@ -76,10 +76,10 @@ def test_speech_synthesis(request):
     # Сохраняем данные синтеза речи в базе данных
     synthesis_data = SynthesisData.objects.create(
         data_recognition=audio_data,
-        text_synthesis=text_synthesis,
-        text_input=text_input,
+        word_synthesis=word,
+        word_input=word_input,
         date_synthesis=datetime.now().date(),
-        wer=wer(text_input, text_synthesis),
+        wer=wer(word_input, word),
     )
 
     account_serializer = get_info_account(request=request)

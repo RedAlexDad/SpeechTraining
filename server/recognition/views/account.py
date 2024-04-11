@@ -3,6 +3,7 @@ from rest_framework.response import Response
 
 from drf_yasg.utils import swagger_auto_schema
 
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import AllowAny
@@ -34,19 +35,30 @@ class AccountGET(APIView):
 
 class AccountPUT(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsModerator]
+    permission_classes = [AllowAny]
     model_class = Account
-    serializer_class = AccountRegisterSerializer
+    serializer_class = AccountSerializer  # Используем обновленный сериализатор
 
     @swagger_auto_schema(request_body=serializer_class)
     def put(self, request, pk, format=None):
-        print('[INFO] API PUT [accountsINFO]')
-        accounts = get_object_or_404(self.model_class, pk=pk)
-        serializer = self.serializer_class(accounts, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # Получаем экземпляр пользователя по его pk
+            account = get_object_or_404(self.model_class, pk=pk)
+
+            # Сериализуем данные пользователя
+            serializer = self.serializer_class(account, data=request.data, partial=True)
+
+            # Проверяем валидность данных
+            serializer.is_valid(raise_exception=True)
+
+            # Обновляем экземпляр пользователя
+            serializer.update(account, serializer.validated_data)
+
+            # Возвращаем успешный ответ с данными пользователя
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as error:
+            # Обработка и возврат ошибки
+            return Response(data={"message": str(error)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AccountDELETE(APIView):
@@ -71,19 +83,10 @@ class RegisterView(APIView):
     @swagger_auto_schema(request_body=AccountRegisterSerializer)
     def post(self, request):
         try:
-            # Получаем данные пользователя из запроса
-            account_data = {
-                "username": request.data.get("username"),
-                "password": request.data.get("password"),
-                "is_moderator": request.data.get("is_moderator", False),
-                "name": request.data.get("name"),
-                "lastname": request.data.get("lastname"),
-                "fathername": request.data.get("fathername"),
-            }
             # Сериализуем данные пользователя и сохраняем их
-            account_serializer = AccountRegisterSerializer(data=account_data)
+            account_serializer = AccountRegisterSerializer(data=request.data)
             account_serializer.is_valid(raise_exception=True)
-            account_instance = account_serializer.save()
+            account_serializer.save()
             # Возвращаем успешный ответ с данными пользователя
             return Response(data=account_serializer.data, status=status.HTTP_201_CREATED)
         except Exception as error:

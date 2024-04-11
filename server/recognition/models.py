@@ -52,23 +52,21 @@ class Account(AbstractBaseUser, PermissionsMixin):
         verbose_name = "Пользователь"
 
 
-class DataRecognitionAndSynthesis(models.Model):
+class Text(models.Model):
     id = models.AutoField(primary_key=True, serialize=False, verbose_name="ID")
-    id_synthesis = models.IntegerField(null=True, verbose_name="ID синтеза")
-    id_recognition = models.IntegerField(null=True, verbose_name="ID распознавания")
-    id_client = models.IntegerField(null=True, verbose_name="ID клиента")
-    id_recommendation = models.IntegerField(null=True, verbose_name="ID рекомендации")
+    theme = models.TextField(verbose_name="Тема")
+    text = models.TextField(verbose_name="Текст")
+    date_text = models.DateField(verbose_name="Дата текста")
 
     class Meta:
-        db_table = 'data_recognition_and_synthesis'
-        verbose_name = "Данные распознавания и синтеза речи"
-
+        db_table = 'text'
+        verbose_name = "Текст"
 
 class RecognitionData(models.Model):
     id = models.AutoField(primary_key=True, serialize=False, verbose_name="ID")
     data_recognition = models.BinaryField(null=True, verbose_name="Запись голоса")
-    text_for_check = models.TextField(null=True, verbose_name="Текст для проверки")
-    transcription_text = models.TextField(null=True, verbose_name="Текст транскрибации")
+    word_for_check = models.TextField(null=True, verbose_name="Слово для проверки")
+    transcription_word = models.TextField(null=True, verbose_name="Слово транскрибации")
     date_recoding = models.DateField(null=True, verbose_name="Дата записи")
     wer = models.FloatField(null=True, verbose_name="WER")
     cer = models.FloatField(null=True, verbose_name="CER")
@@ -84,8 +82,8 @@ class RecognitionData(models.Model):
 class SynthesisData(models.Model):
     id = models.AutoField(primary_key=True, serialize=False, verbose_name="ID")
     data_recognition = models.BinaryField(null=True, verbose_name="Синтез речи")
-    text_synthesis = models.TextField(null=True, verbose_name="Текст синтеза")
-    text_input = models.TextField(null=True, verbose_name="Введенный текст")
+    word_synthesis = models.TextField(null=True, verbose_name="Слово синтеза")
+    word_input = models.TextField(null=True, verbose_name="Введенное слово")
     date_synthesis = models.DateField(null=True, verbose_name="Дата синтеза")
     wer = models.FloatField(null=True, verbose_name="WER")
 
@@ -94,9 +92,26 @@ class SynthesisData(models.Model):
         verbose_name = "Синтез речи"
 
 
+class DataRecognitionAndSynthesis(models.Model):
+    id = models.AutoField(primary_key=True, serialize=False, verbose_name="ID")
+    client = models.ForeignKey(Account, on_delete=models.CASCADE, verbose_name="Клиент")
+    text = models.ForeignKey(Text, on_delete=models.CASCADE, verbose_name="Текст")
+    recognition_data = models.ForeignKey(RecognitionData, on_delete=models.CASCADE, verbose_name="Данные распознавания",
+                                         null=True, blank=True)
+    synthesis_data = models.ForeignKey(SynthesisData, on_delete=models.CASCADE, verbose_name="Данные синтеза",
+                                       null=True, blank=True)
+    sequence_number = models.IntegerField(verbose_name="Порядковый номер")
+
+    class Meta:
+        db_table = 'data_recognition_and_synthesis'
+        verbose_name = "Данные распознавания и синтеза речи"
+
 class Recommendation(models.Model):
     id = models.AutoField(primary_key=True, serialize=False, verbose_name="ID")
-    id_logodedist = models.IntegerField(null=True, verbose_name="ID логопеда")
+    logopedist = models.ForeignKey(Account, on_delete=models.CASCADE, verbose_name="Логопед",
+                                   limit_choices_to={'is_moderator': True})
+    data_recognition_and_synthesis = models.ForeignKey(DataRecognitionAndSynthesis, on_delete=models.CASCADE,
+                                                       verbose_name="Данные распознавания и синтеза")
     recommendation_type = models.TextField(null=True, verbose_name="Тип рекомендации")
     recommendation_text_by_llm = models.TextField(null=True, verbose_name="Текст рекомендации (LLM)")
     recommendation_text_by_logopedist = models.TextField(null=True, verbose_name="Текст рекомендации (логопед)")

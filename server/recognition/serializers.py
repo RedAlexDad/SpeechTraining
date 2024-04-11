@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Account, DataRecognitionAndSynthesis, RecognitionData, Recommendation, SynthesisData
+from .models import Account, DataRecognitionAndSynthesis, RecognitionData, Recommendation, SynthesisData, Text
 
 
 class RecommendationSerializer(serializers.ModelSerializer):
@@ -19,10 +19,18 @@ class DataRecognitionAndSynthesisSerializer(serializers.ModelSerializer):
         model = DataRecognitionAndSynthesis
         fields = '__all__'
 
+
 class SynthesisDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = SynthesisData
         fields = '__all__'
+
+
+class TextSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Text
+        fields = '__all__'
+
 
 # ==================================================================================
 # АККАУНТЫ
@@ -33,6 +41,22 @@ class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = ['id', 'username', 'password', 'is_moderator', 'name', 'lastname', 'fathername']
+
+    def update(self, instance, validated_data):
+        # Проверяем, предоставлен ли пароль в данных запроса
+        if 'password' in validated_data:
+            # Если пароль предоставлен, устанавливаем его
+            instance.set_password(validated_data['password'])
+
+        # Обновляем остальные поля
+        instance.username = validated_data.get('username', instance.username)
+        instance.is_moderator = validated_data.get('is_moderator', instance.is_moderator)
+        instance.name = validated_data.get('name', instance.name)
+        instance.lastname = validated_data.get('lastname', instance.lastname)
+        instance.fathername = validated_data.get('fathername', instance.fathername)
+        instance.save()
+
+        return instance
 
 
 class AccountSerializerInfo(serializers.ModelSerializer):
