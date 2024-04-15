@@ -5,6 +5,7 @@ import {useEffect, useState} from "react";
 import axios from "axios";
 import Button from "@mui/material/Button";
 import {useToken} from "../../Hooks/useToken.ts";
+import {DOMEN} from "../../Consts.ts";
 
 interface Accuracy {
     wer: number | null;
@@ -35,7 +36,7 @@ export default function SpeechPage() {
         setIsRecording(true);
         const currentCollection = sentencesCollections[currentCollectionIndex];
 
-        axios.post('http://127.0.0.1:8000/api/transcribe/', {
+        axios.post(`${DOMEN}transcribe/`, {
             sentences: currentCollection,
         }, {
             headers: {
@@ -46,7 +47,7 @@ export default function SpeechPage() {
             .then(response => {
                 const data = response.data;
                 console.log(data);
-                setTranscription(data.text_for_check);
+                setTranscription(data.transcription_word);
                 setAccuracy({
                     wer: data.wer,
                     cer: data.cer,

@@ -13,7 +13,7 @@ export default function ProfileMenu() {
     const {is_authenticated, is_moderator, setUser} = useAuth()
 
     const auth = async () => {
-        const url = `${DOMEN}api/get_token/`;
+        const url = `${DOMEN}get_token/`;
         await axios.post(url, {}, {
             headers: {
                 "Content-type": "application/json; charset=UTF-8",

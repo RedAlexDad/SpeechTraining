@@ -3,6 +3,7 @@ import {useEffect, useState} from "react";
 import axios from "axios";
 import Button from "@mui/material/Button";
 import {useToken} from "../../Hooks/useToken.ts";
+import {DOMEN} from "../../Consts.ts";
 
 interface Accuracy {
     wer: number | null;
@@ -37,7 +38,7 @@ export default function HearingPage() {
         setIsRecording(true);
         const currentCollection = sentencesCollections[currentCollectionIndex];
 
-        axios.post('http://127.0.0.1:8000/api/create_speech_synthesis/', {text: currentCollection}, {
+        axios.post(`${DOMEN}create_speech_synthesis/`, {text: currentCollection}, {
             headers: {
                 "Content-type": "application/json; charset=UTF-8",
                 authorization: access_token,
@@ -70,7 +71,7 @@ export default function HearingPage() {
         setIsInputClosed(true); // Закрываем input
         const currentCollection = sentencesCollections[currentCollectionIndex];
 
-        axios.post('http://127.0.0.1:8000/api/test_speech_synthesis/', {
+        axios.post(`${DOMEN}test_speech_synthesis/`, {
             text_synthesis: currentCollection,
             text_input: userInput
         }, {
@@ -103,7 +104,7 @@ export default function HearingPage() {
         setIsRecording(true);
         const currentCollection = sentencesCollections[currentCollectionIndex];
 
-        axios.post('http://127.0.0.1:8000/api/transcribe_by_synthesis/', {
+        axios.post(`${DOMEN}transcribe_by_synthesis/`, {
             sentences: currentCollection,
         }, {
             headers: {

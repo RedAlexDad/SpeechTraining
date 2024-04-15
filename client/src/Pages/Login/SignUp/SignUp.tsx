@@ -15,7 +15,7 @@ export default function SignUp() {
     const {setUser} = useAuth()
 
     const login = async (data: any) => {
-        const url: string = `${DOMEN}api/authentication/`;
+        const url: string = `${DOMEN}authentication/`;
         await axios.post(url, {
             username: data.username,
             password: data.password
@@ -41,7 +41,7 @@ export default function SignUp() {
     }
 
     const register = async (data: any) => {
-        const url: string = `${DOMEN}api/register/`;
+        const url: string = `${DOMEN}register/`;
         await axios.post(url, data, {
             headers: {
                 "Content-type": "application/json; charset=UTF-8"

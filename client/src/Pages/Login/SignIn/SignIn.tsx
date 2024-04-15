@@ -15,7 +15,7 @@ export default function SignIn() {
     const {setUser} = useAuth()
 
     const login = async (data: any) => {
-        const url: string = `${DOMEN}api/authentication/`;
+        const url: string = `${DOMEN}authentication/`;
         await axios.post(url, data, {
             headers: {
                 "Content-type": "application/json; charset=UTF-8"
