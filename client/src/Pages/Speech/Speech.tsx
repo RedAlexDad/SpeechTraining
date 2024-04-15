@@ -20,6 +20,7 @@ export default function SpeechPage() {
     const [transcription, setTranscription] = useState<string>('');
     const [accuracy, setAccuracy] = useState<Accuracy>({wer: null, cer: null, mer: null, wil: null, iwer: null});
     const [isRecording, setIsRecording] = useState<boolean>(false);
+    const [intervalId, setIntervalId] = useState<number | null>(null);
 
     const [currentCollectionIndex, setCurrentCollectionIndex] = useState<number>(0);
     const sentencesCollections: string[][] = [
@@ -36,7 +37,9 @@ export default function SpeechPage() {
         setIsRecording(true);
         const currentCollection = sentencesCollections[currentCollectionIndex];
 
-        axios.post(`${DOMEN}transcribe/`, {
+        // Запускаем интервал для отправки запроса каждую секунду
+        const id = setInterval(() => {
+        axios.post(`${DOMEN}start_transcription/`, {
             sentences: currentCollection,
         }, {
             headers: {
@@ -65,6 +68,18 @@ export default function SpeechPage() {
                 // Здесь вы можете добавить код для завершения записи
                 setIsRecording(false);
             });
+        }, 2000); // Отправка запроса каждую секунду
+
+        setIntervalId(id);
+    };
+
+    const stopRecording = () => {
+        setIsRecording(false);
+        // Останавливаем интервал, если он был запущен
+        if (intervalId) {
+            clearInterval(intervalId);
+            setIntervalId(null);
+        }
     };
 
     const switchCollection = () => {
@@ -84,7 +99,13 @@ export default function SpeechPage() {
     };
 
     useEffect(() => {
-    }, []);
+        return () => {
+            // Очищаем интервал при размонтировании компонента
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        };
+    }, [intervalId]);
 
     return (
         <>
@@ -121,9 +142,9 @@ export default function SpeechPage() {
                 <Button
                     variant="outlined"
                     sx={{color: 'white', borderColor: 'white'}}
-                    onClick={startRecording} disabled={isRecording}
+                    onClick={isRecording ? stopRecording : startRecording}
                 >
-                    {isRecording ? 'Идет запись...' : 'Начать запись'}
+                    {isRecording ? 'Прервать запись' : 'Начать запись'}
                 </Button>
                 <Button
                     variant="outlined"

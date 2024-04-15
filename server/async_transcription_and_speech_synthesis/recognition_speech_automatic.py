@@ -1,6 +1,11 @@
+import base64
 import os
 import time
+import io
+import numpy as np
+import requests
 from datetime import datetime
+
 from django.db.models import Max, Count, F
 
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
@@ -19,6 +24,7 @@ from async_transcription_and_speech_synthesis.serializers import RecognitionData
 
 import torch
 import sounddevice as sd
+import soundfile as sf
 
 # Для теста WER - Word Error Rate, CER - Character Error Rate, MER - Match Error Rate, WIL - Word Information Lost
 from jiwer import wer, cer, mer, wil
@@ -61,39 +67,90 @@ else:
     print(f'Успешно модель скачана и сохранена в пути {PATH_MODEL}')
 
 
-@api_view(['POST'])
+@api_view(['PUT'])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([AllowAny])
 # Отправка на запрос транскрибацию
 def create_transcription(request, format=None):
-    # Получим предложения из запроса
-    sentences = request.data.get('sentences', None)
-    sentences = " ".join(sentence.lower() for sentence in sentences)
-    flag_synthesis = request.data.get('flag_synthesis', False)
+    try:
+        # Получаем аудиоданные из тела запроса
+        audio_data = request.body
+
+        # Преобразование байтов обратно в ndarray
+        recording_restored = np.frombuffer(audio_data, dtype=np.int16)
+
+        # Распознавание голоса
+        start_time = time.time()
+        transcription_text = transcribe_audio(recording_restored, model, processor, device)
+        transcription_time = time.time() - start_time
+
+        print("Время распознавания голоса:", transcription_time, "секунд")
+        print("Распознанный текст:", transcription_text)
+
+        return Response(data=transcription_text, status=status.HTTP_200_OK)
+    except Exception as error:
+        return Response(data={error.__class__.__name__: str(error)}, status=status.HTTP_400_BAD_REQUEST)
+
+    # try:
+    #     # Преобразуем строку в объект Python JSON
+    #     json_data = json.loads(request.body.decode('utf-8'))
+    #     print(json_data)
+    #     const_token = 'my_secret_token'
+    #
+    #     if const_token != json_data['token']:
+    #         return Response(data={'message': 'Ошибка, токен не соответствует'}, status=status.HTTP_403_FORBIDDEN)
+    #
+    #     # Изменяем значение sequence_number
+    #     try:
+    #         # Выводит конкретную заявку создателя
+    #         mars_station = get_object_or_404(MarsStation, pk=json_data['id_draft'])
+    #         mars_station.status_mission = json_data['status_mission']
+    #         # Сохраняем объект Location
+    #         mars_station.save()
+    #         data_json = {
+    #             'id': mars_station.id,
+    #             'status_task': mars_station.get_status_task_display_word(),
+    #             'status_mission': mars_station.get_status_mission_display_word()
+    #         }
+    #         return Response(data={'message': 'Статус миссии успешно обновлен', 'data': data_json},
+    #                         status=status.HTTP_200_OK)
+    #     except ValueError:
+    #         return Response({'message': 'Недопустимый формат преобразования'}, status=status.HTTP_400_BAD_REQUEST)
+    # except json.JSONDecodeError as e:
+    #     print(f'Error decoding JSON: {e}')
+    #     return Response(data={'message': 'Ошибка декодирования JSON'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([AllowAny])
-def transcription(request, format=None):
+# Начать транскрибацию
+def start_transcription(request, format=None):
     # Получим предложения из запроса
     sentences = request.data.get('sentences', None)
     sentences = " ".join(sentence.lower() for sentence in sentences)
-    flag_synthesis = request.data.get('flag_synthesis', False)
-
+    transcription_text = ''
     # Запись голоса
     start_time = time.time()
     audio_data = record_audio(duration=1, sampling_rate=16000, channels=1)
     recording_time = time.time() - start_time
 
-    # Распознавание голоса
-    start_time = time.time()
-    transcription_text = transcribe_audio(audio_data, model, processor, device)
-    transcription_time = time.time() - start_time
-
     print("Канонический текст:", sentences)
-    print("Распознанный текст:", transcription_text)
     print("Время записи голоса:", recording_time, "секунд")
-    print("Время распознавания голоса:", transcription_time, "секунд")
+
+    # Асинхронный веб-сервис
+    url = 'http://127.0.0.1:8100/create_transcription/'
+    try:
+        # response = requests.put(url, data=audio_data, headers={'Content-Type': 'audio/wav'})
+        response = requests.put(url, data=audio_data)
+        print(f'response.status_code: {response.status_code}')
+        print(f'response.text: {response.text}')
+        transcription_text = response.text
+
+        if response.status_code != 200:
+            return Response(data=response.text, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as error:
+        print(f'start_transcription; ERORR: {error}')
 
     # Проверяем на точность произношения
     wer_score, cer_score, mer_score, wil_score, iwer_score = calculate_metrics(sentences, transcription_text)
@@ -127,7 +184,7 @@ def transcription(request, format=None):
     # Добавим данные метрики к данным транскрипции
     serialized_data = recognition_data_serializer.data
 
-    return Response(serialized_data, status=status.HTTP_201_CREATED)
+    return Response(data=serialized_data, status=status.HTTP_201_CREATED)
 
 def get_sequence_number(account_id):
     # Определяем последний порядковый номер, если есть предыдущие записи
@@ -149,11 +206,23 @@ def get_sequence_number(account_id):
 
 
 def record_audio(duration=3, sampling_rate=16000, channels=1):
-    print('Начало записи звука')
-    recording = sd.rec(int(duration * sampling_rate), samplerate=sampling_rate, channels=channels, dtype='int16')
-    sd.wait()
-    print('Конец записи звука')
-    return recording
+    try:
+        print('Начало записи звука')
+        recording = sd.rec(int(duration * sampling_rate), samplerate=sampling_rate, channels=channels, dtype='int16')
+        sd.wait()
+        print('Конец записи звука')
+        recording_bytes = recording.tobytes()
+
+        # Сохраняем запись в формате WAV
+        # with io.BytesIO() as wav_buffer:
+        #     sf.write(wav_buffer, recording, samplerate=sampling_rate, format='WAV', subtype='PCM_16')
+        #     wav_buffer.seek(0)
+        #     wav_data = wav_buffer.read()
+
+        return recording_bytes
+    except Exception as error:
+        print({error.__class__.__name__: str(error)})
+        return None
 
 
 def transcribe_audio(audio_data, model, processor, device):
