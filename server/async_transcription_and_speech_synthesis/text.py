@@ -6,14 +6,38 @@ from rest_framework import status
 from async_transcription_and_speech_synthesis.models import DataRecognitionAndSynthesis, Text
 from async_transcription_and_speech_synthesis.serializers import TextSerializer
 
+# Пагинация
+from rest_framework.pagination import PageNumberPagination
+
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([AllowAny])
-def texts(request):
+def text(request):
+    # Получаем список текстов
     texts = Text.objects.all()
-    serializer = TextSerializer(texts, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # кол-во услуг на странице
+    count_item = request.GET.get('count_item', 5)
+    # Пагинации
+    paginator = PageNumberPagination()
+    # Количество элементов на странице
+    paginator.page_size = count_item
+    # Параметр запроса для изменения количества элементов на странице
+    paginator.page_size_query_param = 'page_size'
+    # Максимальное количество элементов на странице
+    paginator.max_page_size = count_item
+
+    result_page = paginator.paginate_queryset(texts, request)
+    texts_serializer = TextSerializer(result_page, many=True)
+
+    return Response(
+        data={
+            'count': paginator.page.paginator.count,
+            'data': texts_serializer.data
+        },
+        status=status.HTTP_200_OK
+    )
 
 
 @api_view(['GET'])

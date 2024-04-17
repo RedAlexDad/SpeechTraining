@@ -12,6 +12,7 @@ import {QueryClient, QueryClientProvider} from "react-query";
 import {useAuth} from "./Hooks/useAuth.ts";
 import SpeechPage from "./Pages/Speech/Speech.tsx";
 import HearingPage from "./Pages/Hearing/Hearing.tsx";
+import TextsListPage from "./Pages/Texts/Texts.tsx";
 
 const LoginFormLayout = () => {
     return (
@@ -35,7 +36,8 @@ function App() {
                                 <Routes>
                                     <Route path="/" element={<Navigate to="/home/" replace/>}/>
                                     {/*Начальное меню*/}
-                                    <Route path="/home/" element={<HomePage/>}/>
+                                    {/*<Route path="/home/" element={<HomePage/>}/>*/}
+                                    <Route path="/home/" element={<TextsListPage/>}/>
 
                                     <Route path="/auth/" element={<LoginFormLayout/>}>
                                         <Route path="" element={<Navigate to="login/" replace/>}/>
