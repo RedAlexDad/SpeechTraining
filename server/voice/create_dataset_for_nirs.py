@@ -1,21 +1,36 @@
 import base64
 import os
 import time
+import uuid
+import numpy as np
 import psycopg2
-import keyboard
 import torch
 import sounddevice as sd
+import soundfile as sf
 from datetime import datetime
 from transformers import SpeechEncoderDecoderModel, Wav2Vec2Processor
 from jiwer import wer, cer, mer, wil
 from collection import collection  # Предполагается, что у вас есть файл collection.py с коллекцией данных
-
+# from google.cloud import speech_v1p1beta1 as speech
 
 class SpeechRecognitionSystem:
-    def __init__(self):
+    def __init__(self, collection, run_model=True):
+        # Использование CPU для предсказания модели
         self.device = 'cpu'
-        self.connect_model()
+        # Подключение к БД
         self.connect_database()
+        # Коллекция данных для тренировки произношения и установки метрики
+        self.collection = collection
+        # Путь для сохранения звука
+        self.save_path = '/home/redalexdad/Документы/GitHub/SpeechTraining/server/voice/dataset/'
+        # Инициализация клиента Google Cloud Speech-to-Text
+        # os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "путь_к_моему_json_ключу" # Нужно разобраться с этим, попозже
+        # self.client = speech.SpeechClient()
+        # Запуск модели (несколько времени занимает)
+        if run_model: self.connect_model()
+
+    def set_save_path(self, path):
+        self.save_path = path
 
     def connect_model(self):
         self.NUM_PROCESSES = max(4, os.cpu_count())  # Количество потоков для обучения и предсказния
@@ -157,26 +172,88 @@ class SpeechRecognitionSystem:
 
         return iwer_score
 
+    def listen_to_audio_by_index(self, index):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute("""
+                SELECT data_recognition
+                FROM recognition_data
+                WHERE id = %s;
+            """, (index,))
+            audio_data_base64 = cursor.fetchone()[0]
+            audio_data = base64.b64decode(audio_data_base64)
+            return audio_data
+        except Exception as e:
+            print(f"Ошибка получения аудио записи: {e}")
+            return None
+
+    def play_audio(self, audio_data, sampling_rate=16000):
+        try:
+            # Преобразование байтовых данных аудио в формат int16
+            audio_array = np.frombuffer(audio_data, dtype='int16')
+            print('Воспроизведение аудио...')
+            sd.play(audio_array, samplerate=sampling_rate)
+            sd.wait()
+            print('Воспроизведение завершено.')
+        except Exception as e:
+            print(f"Ошибка воспроизведения аудио: {e}")
+
+    def save_audio(self, audio_data, sampling_rate=16000):
+        try:
+            audio_array = np.frombuffer(audio_data, dtype='int16')
+            filename = f'audio_{str(uuid.uuid4())[:8]}.wav'
+            full_filename = f'{self.save_path}/{filename}'
+            sf.write(full_filename, audio_array, samplerate=sampling_rate)
+            print(f'Аудио сохранено как {filename}')
+        except Exception as e:
+            print(f'Ошибка сохранения аудио: {e}')
+
+    # def recognize_speech_google(self, audio_data, language_code="ru-RU"):
+    #     try:
+    #         # Определение конфигурации аудио
+    #         audio = speech.RecognitionAudio(content=audio_data)
+    #         config = speech.RecognitionConfig(
+    #             encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+    #             sample_rate_hertz=16000,
+    #             language_code=language_code,
+    #         )
+    #         # Выполнение запроса к Google Cloud Speech-to-Text API
+    #         response = self.client.recognize(config=config, audio=audio)
+    #         # Извлечение текста из распознанной речи
+    #         text = ""
+    #         for result in response.results:
+    #             text += result.alternatives[0].transcript
+    #         return text
+    #     except Exception as e:
+    #         print(f"Ошибка распознавания речи через Google: {e}")
+    #         return None
+
+    def run(self):
+        for theme_num, (theme, words) in enumerate(collection.items(), start=1):
+            print('=' * 100)
+            print(f'Тема {theme_num} / {len(collection)}: {theme}')
+            for word_num, word in enumerate(words, start=1):
+                print('-' * 100)
+                print(f'Слово {word_num} / {len(words)}: {word}')
+                print('Приготовьтесь к записи звука...')
+                time.sleep(2)
+                audio_data = recognition_system.record_audio(duration=2)
+                transcription_text = recognition_system.transcribe_audio(audio_data)
+                print("Канонический текст:", word)
+                print("Распознанный текст:", transcription_text)
+                wer_score, cer_score, mer_score, wil_score, iwer_score = (
+                    recognition_system.calculate_metrics(word, transcription_text))
+                recognition_system.insert_recognition_data(
+                    audio_data, transcription_text, word, datetime.now().date(),
+                    wer_score, cer_score, mer_score, wil_score, iwer_score
+                )
+            print('-' * 100)
+        print('=' * 100)
 
 if __name__ == "__main__":
-    recognition_system = SpeechRecognitionSystem()
-    for theme, words in collection.items():
-        print('=' * 100)
-        print(f'Тема: {theme}')
-        for word in words:
-            print('-' * 100)
-            print(f'Слово: {word}')
-            print('Приготовьтесь к записи звука...')
-            time.sleep(2)
-            audio_data = recognition_system.record_audio(duration=2)
-            transcription_text = recognition_system.transcribe_audio(audio_data)
-            print("Канонический текст:", word)
-            print("Распознанный текст:", transcription_text)
-            wer_score, cer_score, mer_score, wil_score, iwer_score = (
-                recognition_system.calculate_metrics(word, transcription_text))
-            recognition_system.insert_recognition_data(
-                audio_data, transcription_text, word, datetime.now().date(),
-                wer_score, cer_score, mer_score, wil_score, iwer_score
-            )
-        print('-' * 100)
-    print('=' * 100)
+    recognition_system = SpeechRecognitionSystem(collection, run_model=False)
+    audio_data = recognition_system.listen_to_audio_by_index(20)
+    recognition_system.play_audio(audio_data)
+    recognition_system.save_audio(audio_data)
+
+
