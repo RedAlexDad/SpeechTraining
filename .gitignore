@@ -1,1 +1,5 @@
 /idea
+.idea
+.ipynb_checkpoints
+client
+server
