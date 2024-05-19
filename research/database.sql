@@ -17,3 +17,17 @@ CREATE TABLE IF NOT EXISTS recognition_data
 
 SELECT *
 FROM recognition_data;
+
+-- SQL-запрос, который выводит общее количество слов, записанных в каждый день. Для этого можно использовать следующий запрос:
+SELECT
+    date_recoding,
+    COUNT(*) AS word_count
+FROM
+    recognition_data
+GROUP BY
+    date_recoding
+ORDER BY
+    date_recoding;
+
+-- Запрос, который выводит общее количество:
+SELECT COUNT(*) FROM recognition_data;
