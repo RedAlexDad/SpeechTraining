@@ -10,7 +10,7 @@ import soundfile as sf
 from datetime import datetime
 from transformers import SpeechEncoderDecoderModel, Wav2Vec2Processor
 from jiwer import wer, cer, mer, wil
-from collection import collection
+from research.word.collection import collection
 
 
 # from google.cloud import speech_v1p1beta1 as speech
@@ -24,7 +24,7 @@ class SpeechRecognitionSystem:
         # Коллекция данных для тренировки произношения и установки метрики
         self.collection = collection
         # Путь для сохранения звука
-        self.save_path = '/home/redalexdad/Документы/GitHub/SpeechTraining/server/voice/dataset/'
+        self.save_path = '/home/redalexdad/GitHub/SpeechTraining/server/voice/dataset/'
         # Инициализация клиента Google Cloud Speech-to-Text
         # os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "путь_к_моему_json_ключу" # Нужно разобраться с этим, попозже
         # self.client = speech.SpeechClient()
