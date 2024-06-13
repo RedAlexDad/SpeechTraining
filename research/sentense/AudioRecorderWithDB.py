@@ -6,18 +6,16 @@ import subprocess
 import numpy as np
 import soundfile as sf
 
-from pydub import AudioSegment
-
 from research.sentense.AudioRecorderGUI import AudioRecorder
 from research.sentense.DB_PostgreSQL import AudioRecorderDB
-from research.sentense.AutomaticSpeechRecognizerYandex import AutomaticSpeechRecognizerYandex
+from research.sentense.AutomaticSpeechRecognitionrYandex import AutomaticSpeechRecognitionYandex
 
 class AudioRecorderWithDB(AudioRecorder):
     def __init__(self, FOLDER_ID, IAM_TOKEN):
         super().__init__()
         self.db = AudioRecorderDB(dbname='asr_text', user='postgres', password='postgres', host='localhost', port='5432')
         self.db.connect()
-        self.automatic_speech_recognizer = AutomaticSpeechRecognizerYandex(FOLDER_ID, IAM_TOKEN)
+        self.automatic_speech_recognizer = AutomaticSpeechRecognitionYandex(FOLDER_ID, IAM_TOKEN)
 
     def save_recording(self):
         # Создание временного файла для сохранения записанных аудиоданных
