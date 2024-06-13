@@ -5,7 +5,7 @@ from AudioRecorderWithDB import AudioRecorderWithDB
 
 if __name__ == "__main__":
     FOLDER_ID = "b1gko9u515ceceiibap6"
-    IAM_TOKEN = 't1.9euelZqWm8eNmc2PyprHycqcnM6elO3rnpWaxo-bkJWWzcnPj5SSkIzNjYrl9PdNOFhM-e9oCjnb3fT3DWdVTPnvaAo5283n9euelZqRzpLJmpPPks-SnY7MzJedm-_8xeuelZqRzpLJmpPPks-SnY7MzJedmw.TqrhFZXYT6rlgEn-jsZ0WMtrQ_aPMZJwSMJjSo2fzppP3gMPivif8OzKAb-kIjee5G48Z4nj2EwTxsFdPITVDA'
+    IAM_TOKEN = 't1.9euelZrIlImZzJvGjZrHjMeZkZKUie3rnpWaxo-bkJWWzcnPj5SSkIzNjYrl8_dYNlRM-e9rBgky_d3z9xhlUUz572sGCTL9zef1656VmsqMi86Xy5mNjonMk5eMkYvH7_zF656VmsqMi86Xy5mNjonMk5eMkYvH.FLI4D0KxlIykVE8QCTRN7b_KMuLKvb5OBUZj0i0ZNTVAOyrCSxiwH-6wvesNUBt4xMM_lxTnQ445hr7sQ_jhBg'
 
     app = QApplication(sys.argv)
     recorder = AudioRecorderWithDB(FOLDER_ID=FOLDER_ID, IAM_TOKEN=IAM_TOKEN)
