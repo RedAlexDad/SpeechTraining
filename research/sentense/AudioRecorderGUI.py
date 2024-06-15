@@ -1,3 +1,4 @@
+import os
 import sys
 import pyaudio
 import wave
@@ -8,11 +9,12 @@ from PyQt5.QtCore import QTimer
 
 from sentences_text import sentences_text
 
+
 class AudioRecorder(QWidget):
     def __init__(self):
         super().__init__()
-        self.width =  800
-        self.height  =  350
+        self.width = 800
+        self.height = 350
 
         # Предложения
         self.sentences_text = sentences_text
@@ -88,11 +90,13 @@ class AudioRecorder(QWidget):
 
         self.recording = True
         self.frames = []
-        self.stream = self.audio.open(format=self.FORMAT,
-                                      channels=self.CHANNELS,
-                                      rate=self.RATE,
-                                      input=True,
-                                      frames_per_buffer=self.CHUNK)
+        self.stream = self.audio.open(
+            format=self.FORMAT,
+            channels=self.CHANNELS,
+            rate=self.RATE,
+            input=True,
+            frames_per_buffer=self.CHUNK
+        )
         self.start_button.setEnabled(False)
         self.stop_button.setEnabled(True)
         self.record_audio()
@@ -113,7 +117,10 @@ class AudioRecorder(QWidget):
         self.stop_button.setEnabled(False)
 
     def save_recording(self):
-        waveFile = wave.open(self.WAVE_OUTPUT_FILENAME, 'wb')
+        output_dir = '../voice'
+        os.makedirs(output_dir, exist_ok=True)  # Создаем каталог, если он не существует
+
+        waveFile = wave.open(os.path.join(output_dir, 'output.ogg'), 'wb')
         waveFile.setnchannels(self.CHANNELS)
         waveFile.setsampwidth(self.audio.get_sample_size(self.FORMAT))
         waveFile.setframerate(self.RATE)

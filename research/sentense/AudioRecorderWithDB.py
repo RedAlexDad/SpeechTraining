@@ -8,14 +8,20 @@ import soundfile as sf
 
 from research.sentense.AudioRecorderGUI import AudioRecorder
 from research.sentense.DB_PostgreSQL import AudioRecorderDB
-from research.sentense.AutomaticSpeechRecognitionrYandex import AutomaticSpeechRecognitionYandex
+from research.sentense.AutomaticSpeechRecognitionYandex import AutomaticSpeechRecognitionYandex
+from research.sentense.AutomaticSpeechRecognitionMBART50 import AutomaticSpeechRecognitionMBART50
+from research.sentense.AutomaticSpeechRecognitionSaluteSpeech import AutomaticSpeechRecognitionSaluteSpeech
+
 
 class AudioRecorderWithDB(AudioRecorder):
-    def __init__(self, FOLDER_ID, IAM_TOKEN):
+    def __init__(self, FOLDER_ID_Y, OAUTH, CLINET_ID_S, CLIENT_SECRET_S):
         super().__init__()
-        self.db = AudioRecorderDB(dbname='asr_text', user='postgres', password='postgres', host='localhost', port='5432')
+        self.db = AudioRecorderDB(dbname='asr_text', user='postgres', password='postgres', host='localhost',
+                                  port='5432')
         self.db.connect()
-        self.automatic_speech_recognizer = AutomaticSpeechRecognitionYandex(FOLDER_ID, IAM_TOKEN)
+        self.asr_yandex = AutomaticSpeechRecognitionYandex(FOLDER_ID_Y, OAUTH)
+        self.asr_mbart50 = AutomaticSpeechRecognitionMBART50()
+        self.asr_salute_speech = AutomaticSpeechRecognitionSaluteSpeech(CLINET_ID_S, CLIENT_SECRET_S)
 
     def save_recording(self):
         # Создание временного файла для сохранения записанных аудиоданных
@@ -38,11 +44,20 @@ class AudioRecorderWithDB(AudioRecorder):
             if self.frames:
                 topic = self.topic_combobox.currentText()
                 paragraph_text = self.text_edit.toPlainText()
-                transcript_text = self.automatic_speech_recognizer.recognize_speech_audio_data(voice_recording)
-                self.db.insert_record(topic, paragraph_text, transcript_text, voice_recording)
+                transcript_text_yandex = self.asr_yandex.recognize_speech_audio_data(voice_recording)
+                transcript_text_salutespeech = self.asr_salute_speech.recognize_speech_salute(voice_recording)
+                transcript_text_mbart50 = self.asr_mbart50.transcribe_audio(frames_np)
+                self.db.insert_record(
+                    topic=topic,
+                    paragraph_text=paragraph_text,
+                    transcript_text_yandex=transcript_text_yandex,
+                    transcript_text_salutespeech=transcript_text_salutespeech,
+                    transcript_text_mbart50=transcript_text_mbart50,
+                    voice_recording=voice_recording
+                )
 
         # Вызов метода родительского класса для сохранения аудиофайла на диск
-        # super().save_recording()
+        super().save_recording()
 
     def closeEvent(self, event):
         self.db.disconnect()

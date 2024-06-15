@@ -30,24 +30,32 @@ class AudioRecorderDB:
 
     def create_table(self):
         create_table_query = """
-            CREATE TABLE IF NOT EXISTS audio_records (
+            CREATE TABLE audio_records (
                 id SERIAL PRIMARY KEY,
                 topic TEXT NOT NULL,
                 paragraph_text TEXT NOT NULL,
-                transcript_text TEXT NOT NULL,
+                transcript_text_yandex TEXT NOT NULL,
+                transcript_text_salutespeech TEXT NOT NULL,
+                transcript_text_mbart TEXT NOT NULL,
                 voice_recording BYTEA NOT NULL,
-                record_date TIMESTAMP NOT NULL
+                record_date DATE NOT NULL
             );
         """
         self.cur.execute(create_table_query)
         self.conn.commit()
 
-    def insert_record(self, topic, paragraph_text, transcript_text, voice_recording):
+    def insert_record(self, topic, paragraph_text, transcript_text_yandex, transcript_text_salutespeech,
+                      transcript_text_mbart50, voice_recording):
         insert_query = sql.SQL(
-            "INSERT INTO audio_records (topic, paragraph_text, transcript_text, voice_recording, record_date) VALUES (%s, %s, %s, %s, %s)"
-        ).format(sql.Identifier('topic'), sql.Identifier('paragraph_text'), sql.Identifier('transcript_text'), sql.Identifier('voice_recording'), sql.Identifier('record_date'))
-        record_date = datetime.now()
-        self.cur.execute(insert_query, (topic, paragraph_text, transcript_text, psycopg2.Binary(voice_recording), record_date))
+            "INSERT INTO audio_records (topic, paragraph_text, transcript_text_yandex, transcript_text_salutespeech, transcript_text_mbart50, voice_recording, record_date) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        )
+        record_date = datetime.now().date()
+        self.cur.execute(insert_query, (
+            topic, paragraph_text, transcript_text_yandex, transcript_text_salutespeech, transcript_text_mbart50,
+            psycopg2.Binary(voice_recording),
+            record_date
+        ))
         self.conn.commit()
 
 # Пример использования класса

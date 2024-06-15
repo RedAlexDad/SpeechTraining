@@ -3,7 +3,7 @@ import json
 import io
 import requests
 
-class AutomaticSpeechRecognitionYandex:
+class AutomaticSpeechRecognitionGoogle:
     def __init__(self, folder_id, iam_token):
         self.folder_id = folder_id
         self.iam_token = iam_token

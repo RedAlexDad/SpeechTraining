@@ -1,7 +1,7 @@
 from jiwer import wer, cer, mer, wil
 
 
-class Metric:
+class Metrics:
     def __init__(self):
         self.wer_score = None
         self.cer_score = None
