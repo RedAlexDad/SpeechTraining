@@ -6,5 +6,5 @@ CREATE TABLE audio_records (
     transcript_text_salutespeech TEXT NOT NULL,
     transcript_text_mbart50 TEXT NOT NULL,
     voice_recording BYTEA NOT NULL,
-    record_date DATE NOT NULL
+    record_date TIMESTAMP NOT NULL
 );

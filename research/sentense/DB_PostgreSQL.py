@@ -38,7 +38,7 @@ class AudioRecorderDB:
                 transcript_text_salutespeech TEXT NOT NULL,
                 transcript_text_mbart TEXT NOT NULL,
                 voice_recording BYTEA NOT NULL,
-                record_date DATE NOT NULL
+                record_date TIMESTAMP NOT NULL
             );
         """
         self.cur.execute(create_table_query)
@@ -50,7 +50,7 @@ class AudioRecorderDB:
             "INSERT INTO audio_records (topic, paragraph_text, transcript_text_yandex, transcript_text_salutespeech, transcript_text_mbart50, voice_recording, record_date) "
             "VALUES (%s, %s, %s, %s, %s, %s, %s)"
         )
-        record_date = datetime.now().date()
+        record_date = datetime.now()
         self.cur.execute(insert_query, (
             topic, paragraph_text, transcript_text_yandex, transcript_text_salutespeech, transcript_text_mbart50,
             psycopg2.Binary(voice_recording),

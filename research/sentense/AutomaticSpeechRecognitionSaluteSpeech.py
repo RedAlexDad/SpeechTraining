@@ -8,11 +8,12 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 from tokens import CLIENT_ID, CLIENT_SECRET
 
+
 class AutomaticSpeechRecognitionSaluteSpeech:
     def __init__(self, client_id, client_secret, scope='SALUTE_SPEECH_PERS'):
         self.client_id = client_id
         self.client_secret = client_secret
-        self.scope = scope # Укажите ваш scope (SALUTE_SPEECH_PERS, SALUTE_SPEECH_CORP или SBER_SPEECH)
+        self.scope = scope  # Укажите ваш scope (SALUTE_SPEECH_PERS, SALUTE_SPEECH_CORP или SBER_SPEECH)
         self.access_token = self.get_access_token()
 
     def get_access_token(self):
@@ -54,8 +55,11 @@ class AutomaticSpeechRecognitionSaluteSpeech:
         try:
             response = requests.post(url, headers=headers, params=params, data=audio_data, verify=False)
             response.raise_for_status()
-            print('[SALUTE SPEECH] Распознанный текст:', response.json()['result'][0])
-            return response.json()['result'][0]
+            # print('response:', response.json(), end='\n\n')
+            # Соединяем тексты из массива в один текст
+            combined_text = " ".join(response.json()['result'])
+            print('[SALUTE SPEECH] Распознанный текст:', combined_text)
+            return combined_text
         except requests.exceptions.RequestException as e:
             print(f"Ошибка запроса: {e}")
             return None
@@ -82,7 +86,6 @@ class AutomaticSpeechRecognitionSaluteSpeech:
         except requests.exceptions.RequestException as e:
             print(f"Ошибка запроса: {e}")
             return None
-
 
 # if __name__ == '__main__':
 #     audio_file_path = "../voice/output.ogg"

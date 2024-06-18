@@ -49,6 +49,9 @@ class AudioRecorder(QWidget):
         self.stop_button.clicked.connect(self.stop_recording)
         self.stop_button.setEnabled(False)
 
+        self.next_paragraph_button = QPushButton("Следующий абзац", self)
+        self.next_paragraph_button.clicked.connect(self.next_paragraph)
+
         self.timer.timeout.connect(self.update_timer)
         self.time_label = QLabel("Время: 00:00", self)
 
@@ -58,6 +61,7 @@ class AudioRecorder(QWidget):
         layout.addWidget(self.time_label)
         layout.addWidget(self.start_button)
         layout.addWidget(self.stop_button)
+        layout.addWidget(self.next_paragraph_button)
 
         self.setLayout(layout)
         self.setFixedSize(self.width, self.height)  # Фиксация размера окна
@@ -71,7 +75,18 @@ class AudioRecorder(QWidget):
     def update_text(self):
         selected_topic = self.topic_combobox.currentText()
         selected_text = sentences_text.get(selected_topic, "Текст не найден")
-        self.text_edit.setPlainText(selected_text)
+        self.paragraphs = selected_text.split('\n\n')
+        self.current_paragraph_index = 0
+        self.update_paragraph()
+
+    def update_paragraph(self):
+        if self.paragraphs:
+            current_paragraph = self.paragraphs[self.current_paragraph_index]
+            self.text_edit.setPlainText(current_paragraph)
+
+    def next_paragraph(self):
+        self.current_paragraph_index = (self.current_paragraph_index + 1) % len(self.paragraphs)
+        self.update_paragraph()
 
     def setup_audio(self):
         self.FORMAT = pyaudio.paInt16
