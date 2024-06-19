@@ -1,73 +1,51 @@
-import requests
-import uuid
-import base64
-from datetime import datetime
+import pyaudio
 
-import urllib3
-# Отключение предупреждений о самоподписанных сертификатах
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+class AudioRecorder:
+    def __init__(self):
+        self.setup_audio()
 
-def get_access_token(client_id, client_secret, scope):
-    url = "https://ngw.devices.sberbank.ru:9443/api/v2/oauth"
-    auth_string = f"{client_id}:{client_secret}"
-    auth_header = base64.b64encode(auth_string.encode()).decode()
+    def setup_audio(self):
+        self.FORMAT = pyaudio.paInt16
+        self.CHANNELS = 1
+        self.RATE = 16000
+        self.CHUNK = 1024
+        self.WAVE_OUTPUT_FILENAME = "../voice/output.ogg"
 
-    headers = {
-        "Authorization": f"Basic {auth_header}",
-        "RqUID": str(uuid.uuid4()),
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
-    data = {
-        "scope": scope
-    }
+        self.audio = pyaudio.PyAudio()
+        self.frames = []
+        self.recording = False
 
-    try:
-        response = requests.post(url, headers=headers, data=data, verify=False)
-        response.raise_for_status()
-        token_info = response.json()
-        return token_info["access_token"]
-    except requests.exceptions.RequestException as e:
-        print(f"Ошибка запроса токена: {e}")
-        return None
+    def get_input_device_index(self):
+        for i in range(self.audio.get_device_count()):
+            dev = self.audio.get_device_info_by_index(i)
+            if dev['maxInputChannels'] > 0:
+                print(f"Устройство: {dev['name']}, Индекс: {i}, Частота: {dev['defaultSampleRate']}")
+                if 'supportedSampleRates' in dev and self.RATE in dev['supportedSampleRates']:
+                    return i
+        raise ValueError("Не удалось найти подходящее входное устройство.")
 
+    def start_recording(self):
+        self.time_elapsed = 0
 
-def recognize_speech(audio_path, access_token):
-    url = "https://smartspeech.sber.ru/rest/v1/speech:recognize"
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "audio/ogg;codecs=opus"
-    }
-    params = {
-        "language": "ru-RU",
-        "sample_rate": 16000,
-        "enable_profanity_filter": False,
-        "channels_count": 1
-    }
+        self.recording = True
+        self.frames = []
+        self.input_device_index = self.get_input_device_index()  # Установите здесь нужный индекс устройства
+        self.stream = self.audio.open(
+            format=self.FORMAT,
+            channels=self.CHANNELS,
+            rate=self.RATE,
+            input=True,
+            input_device_index=self.input_device_index,
+            frames_per_buffer=self.CHUNK
+        )
+        self.record_audio()
 
-    try:
-        with open(audio_path, "rb") as audio_file:
-            audio_data = audio_file.read()
-            response = requests.post(url, headers=headers, params=params, data=audio_data, verify=False)
-            response.raise_for_status()
-            return response.json()
-    except requests.exceptions.RequestException as e:
-        print(f"Ошибка запроса: {e}")
-        return None
+    def record_audio(self):
+        while self.recording:
+            data = self.stream.read(self.CHUNK)
+            self.frames.append(data)
 
-
-if __name__ == '__main__':
-    client_id = "8259c3ae-f7e2-42a1-8e9f-74fe65ad071d"  # Укажите ваш Client ID
-    client_secret = "0817aa25-bbd8-4448-940b-c8bf7422e8e0"  # Укажите ваш Client Secret
-    scope = "SALUTE_SPEECH_PERS"  # Укажите ваш scope (SALUTE_SPEECH_PERS, SALUTE_SPEECH_CORP или SBER_SPEECH)
-
-    access_token = get_access_token(client_id, client_secret, scope)
-
-    if access_token:
-        audio_file_path = '../voice/test.ogg'  # Укажите путь к вашему аудиофайлу
-        transcript = recognize_speech(audio_file_path, access_token)
-        if transcript:
-            print("Распознанный текст:", transcript)
-        else:
-            print("Не удалось распознать текст")
-    else:
-        print("Не удалось получить токен доступа")
+# Пример использования
+if __name__ == "__main__":
+    audio_recorder = AudioRecorder()
+    audio_recorder.start_recording()
