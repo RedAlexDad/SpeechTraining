@@ -50,10 +50,10 @@ class AutomaticSpeechRecognitionYandex:
                 return decodedData.get("result")
             else:
                 return f"Ошибка: {decodedData.get('error_code')} - {decodedData.get('error_message')}"
-        except urllib.error.HTTPError as e:
-            return f"HTTP Error: {e.code} - {e.reason}"
-        except Exception as e:
-            return f"Ошибка: {str(e)}"
+        except urllib.error.HTTPError as error:
+            return f"HTTP Error: {error.code} - {error.reason}"
+        except Exception as error:
+            return f"Ошибка: {str(error)}"
 
 
     def recognize_speech_audio_path(self, audio_file_path, lang='ru-RU', topic='general'):

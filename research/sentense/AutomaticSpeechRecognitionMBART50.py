@@ -43,9 +43,9 @@ class AutomaticSpeechRecognitionMBART50:
                 )[0]
                 print('[MBART50] Распознанный текст:', transcription)
                 return transcription.lower()
-        except Exception as e:
-            print(f"Ошибка транскрибации аудио: {e}")
-            return 'None'
+        except Exception as error:
+            print(f"Ошибка транскрибации аудио: {error}")
+            return f"Ошибка: {str(error)}"
 
     def load_audio(self, file_path):
         try:

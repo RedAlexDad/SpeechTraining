@@ -4,7 +4,7 @@ import pyaudio
 import wave
 import uuid
 
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QLabel, QComboBox, QTextEdit
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QLabel, QComboBox, QTextEdit, QCheckBox
 from PyQt5.QtCore import QTimer
 
 from sentences_text import sentences_text
@@ -52,6 +52,8 @@ class AudioRecorder(QWidget):
         self.next_paragraph_button = QPushButton("Следующий абзац", self)
         self.next_paragraph_button.clicked.connect(self.next_paragraph)
 
+        self.auto_stop_checkbox = QCheckBox("Автоостановка через 30 секунд", self)
+
         self.timer.timeout.connect(self.update_timer)
         self.time_label = QLabel("Время: 00:00", self)
 
@@ -59,6 +61,7 @@ class AudioRecorder(QWidget):
         layout.addWidget(self.topic_combobox)
         layout.addWidget(self.text_edit)
         layout.addWidget(self.time_label)
+        layout.addWidget(self.auto_stop_checkbox)
         layout.addWidget(self.start_button)
         layout.addWidget(self.stop_button)
         layout.addWidget(self.next_paragraph_button)
@@ -71,6 +74,9 @@ class AudioRecorder(QWidget):
         minutes = self.time_elapsed // 60
         seconds = self.time_elapsed % 60
         self.time_label.setText(f"Время: {minutes:02}:{seconds:02}")
+
+        if self.auto_stop_checkbox.isChecked() and self.time_elapsed >= 30:
+            self.stop_recording()
 
     def update_text(self):
         selected_topic = self.topic_combobox.currentText()

@@ -60,9 +60,9 @@ class AutomaticSpeechRecognitionSaluteSpeech:
             combined_text = " ".join(response.json()['result'])
             print('[SALUTE SPEECH] Распознанный текст:', combined_text)
             return combined_text
-        except requests.exceptions.RequestException as e:
-            print(f"Ошибка запроса: {e}")
-            return None
+        except requests.exceptions.RequestException as error:
+            print(f"Ошибка запроса: {error}")
+            return f"Ошибка: {str(error)}"
 
     def recognize_speech_audio_path(self, audio_file_path):
         url = "https://smartspeech.sber.ru/rest/v1/speech:recognize"

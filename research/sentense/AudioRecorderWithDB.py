@@ -6,15 +6,15 @@ import subprocess
 import numpy as np
 import soundfile as sf
 
-from research.sentense.AudioRecorderGUI import AudioRecorder
-from research.sentense.DB_PostgreSQL import AudioRecorderDB
-from research.sentense.AutomaticSpeechRecognitionYandex import AutomaticSpeechRecognitionYandex
-from research.sentense.AutomaticSpeechRecognitionMBART50 import AutomaticSpeechRecognitionMBART50
-from research.sentense.AutomaticSpeechRecognitionSaluteSpeech import AutomaticSpeechRecognitionSaluteSpeech
+from AudioRecorderGUI import AudioRecorder
+from DB_PostgreSQL import AudioRecorderDB
+from AutomaticSpeechRecognitionYandex import AutomaticSpeechRecognitionYandex
+from AutomaticSpeechRecognitionMBART50 import AutomaticSpeechRecognitionMBART50
+from AutomaticSpeechRecognitionSaluteSpeech import AutomaticSpeechRecognitionSaluteSpeech
 
 
 class AudioRecorderWithDB(AudioRecorder):
-    def __init__(self, FOLDER_ID_Y, OAUTH, CLINET_ID_S, CLIENT_SECRET_S):
+    def __init__(self, FOLDER_ID_Y: str, OAUTH: str, CLINET_ID_S: str, CLIENT_SECRET_S: str):
         super().__init__()
         self.db = AudioRecorderDB(dbname='asr_text', user='postgres', password='postgres', host='localhost',
                                   port='5432')
@@ -59,6 +59,6 @@ class AudioRecorderWithDB(AudioRecorder):
         # Вызов метода родительского класса для сохранения аудиофайла на диск
         super().save_recording()
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: any):
         self.db.disconnect()
         super().closeEvent(event)
