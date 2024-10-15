@@ -29,7 +29,7 @@ class AutomaticSpeechRecognitionMBART50:
             self.model.save_pretrained(self.PATH_MODEL)
             print(f'Модель успешно загружена и сохранена в {self.PATH_MODEL}')
 
-    def transcribe_audio(self, audio_data):
+    def transcribe_audio(self, audio_data, print_result=True):
         try:
             audio_tensor = torch.FloatTensor(audio_data.squeeze()).to(self.device)
             processed = self.processor(audio_tensor, sampling_rate=16000, return_tensors="pt", padding='longest').to(
@@ -41,7 +41,7 @@ class AutomaticSpeechRecognitionMBART50:
                     num_processes=self.NUM_PROCESSES,
                     skip_special_tokens=True
                 )[0]
-                print('[MBART50] Распознанный текст:', transcription)
+                if print_result: print('[MBART50] Распознанный текст:', transcription)
                 return transcription.lower()
         except Exception as error:
             print(f"Ошибка транскрибации аудио: {error}")

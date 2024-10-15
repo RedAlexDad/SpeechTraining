@@ -39,7 +39,7 @@ class AutomaticSpeechRecognitionSaluteSpeech:
             print(f"Ошибка запроса токена: {e}")
             return ""
 
-    def recognize_speech_salute(self, audio_data):
+    def recognize_speech_salute(self, audio_data, print_result=True):
         url = "https://smartspeech.sber.ru/rest/v1/speech:recognize"
         headers = {
             "Authorization": f"Bearer {self.access_token}",
@@ -58,7 +58,7 @@ class AutomaticSpeechRecognitionSaluteSpeech:
             # print('response:', response.json(), end='\n\n')
             # Соединяем тексты из массива в один текст
             combined_text = " ".join(response.json()['result'])
-            print('[SALUTE SPEECH] Распознанный текст:', combined_text)
+            if print_result: print('[SALUTE SPEECH] Распознанный текст:', combined_text)
             return combined_text
         except requests.exceptions.RequestException as error:
             print(f"Ошибка запроса: {error}")
