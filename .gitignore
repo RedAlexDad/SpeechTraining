@@ -4,3 +4,9 @@
 client
 server
 /research/sentense/tokens.py
+/research/sentense/.ipynb_checkpoints
+/research/sentense/.virtual_documents
+/research/sentense/__pycache__
+
+/research/word/.ipynb_checkpoints
+/research/word/__pycache__
